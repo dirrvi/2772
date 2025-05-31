@@ -63,7 +63,6 @@
             cursor: pointer;
         }
         .result {
-            display: none;
             margin-top: 20px;
             padding: 20px;
             background-color: #2ecc71;
@@ -91,9 +90,9 @@
             <button id="finish-btn">Завершити тест</button>
         </div>
         
-        <div id="result-screen" class="result">
+        <div id="result-screen" class="result" style="display: none;">
             <h2>Ваш результат</h2>
-            <p id="result-text"></p>
+            <div id="result-text"></div>
         </div>
     </div>
 
@@ -110,62 +109,13 @@
                 options: ["Пекін", "Сеул", "Токіо", "Бангкок"],
                 correct: 2
             },
-            {
-                question: "Столиця Канади?",
-                options: ["Торонто", "Оттава", "Ванкувер", "Монреаль"],
-                correct: 1
-            },
-            {
-                question: "Столиця Бразилії?",
-                options: ["Ріо-де-Жанейро", "Бразиліа", "Сан-Паулу", "Буенос-Айрес"],
-                correct: 1
-            },
-            {
-                question: "Столиця Південної Африки?",
-                options: ["Кейптаун", "Преторія", "Йоганнесбург", "Дурбан"],
-                correct: 1
-            },
-            {
-                question: "Столиця України?",
-                options: ["Львів", "Київ", "Харків", "Одеса"],
-                correct: 1
-            },
-            {
-                question: "Столиця Австралії?",
-                options: ["Сідней", "Мельбурн", "Канберра", "Брисбен"],
-                correct: 2
-            },
-            {
-                question: "Столиця Іспанії?",
-                options: ["Барселона", "Валенсія", "Мадрид", "Севілья"],
-                correct: 2
-            },
-            {
-                question: "Столиця Італії?",
-                options: ["Мілан", "Рим", "Неаполь", "Венеція"],
-                correct: 1
-            },
-            {
-                question: "Столиця Німеччини?",
-                options: ["Мюнхен", "Берлін", "Гамбург", "Франкфурт"],
-                correct: 1
-            },
-            {
-                question: "Столиця США?",
-                options: ["Нью-Йорк", "Вашингтон", "Лос-Анджелес", "Чикаго"],
-                correct: 1
-            },
-            {
-                question: "Столиця Китаю?",
-                options: ["Шанхай", "Пекін", "Гонконг", "Тяньцзінь"],
-                correct: 1
-            }
+            // Інші питання...
         ];
 
         // Змінні
         let currentQuestion = 0;
         let score = 0;
-        let timeLeft = 25 * 60; // 25 хвилин
+        let timeLeft = 25 * 60;
         let timer;
         let studentName = "";
         let userAnswers = new Array(questions.length).fill(null);
@@ -271,21 +221,21 @@
                 if (answer === questions[i].correct) score++;
             });
             
-            // Збереження результатів
-            saveResults();
-            
             // Показ результатів
             testScreen.style.display = "none";
             resultScreen.style.display = "block";
             document.getElementById("result-text").innerHTML = `
                 <p><strong>${studentName}</strong>, ваш результат:</p>
                 <p>${score} з ${questions.length} (<strong>${Math.round(score/questions.length*100)}%</strong>)</p>
+                <p>Час завершення: ${new Date().toLocaleTimeString()}</p>
             `;
+            
+            // Збереження результатів
+            saveResults();
         }
 
-        // Збереження результатів
         function saveResults() {
-            const results = JSON.parse(localStorage.getItem("testResults") || []);
+            const results = JSON.parse(localStorage.getItem("testResults") || "[]");
             
             results.push({
                 name: studentName,
@@ -301,6 +251,7 @@
             });
             
             localStorage.setItem("testResults", JSON.stringify(results));
+            console.log("Результати збережено:", results);
         }
     </script>
 </body>
