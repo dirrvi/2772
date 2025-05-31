@@ -1,110 +1,109 @@
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const testContainer = document.createElement('div');
+    testContainer.className = 'container hidden';
+    document.body.appendChild(testContainer);
 
-const questions = [
-  { question: 'Столиця Франції?', options: ['Париж', 'Берлін', 'Мадрид'], answer: 'Париж' },
-  { question: 'Столиця Японії?', options: ['Пекін', 'Токіо', 'Сеул'], answer: 'Токіо' },
-  // Додай ще 10 питань у цьому ж форматі
-];
+    // Приклад тесту (можна замінити на свої питання)
+    const testQuestions = [
+        {
+            question: "Яка столиця України?",
+            options: ["Львів", "Київ", "Одеса", "Харків"],
+            answer: 1
+        },
+        {
+            question: "2 + 2 = ?",
+            options: ["3", "4", "5", "6"],
+            answer: 1
+        },
+        {
+            question: "Яка найдовша річка в Україні?",
+            options: ["Дніпро", "Дунай", "Дністер", "Південний Буг"],
+            answer: 0
+        }
+    ];
 
-export default function CapitalsQuizApp() {
-  const [step, setStep] = useState('login');
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [result, setResult] = useState(null);
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const code = document.getElementById('code').value;
 
-  const handleLogin = () => {
-    if (code === '51' && name.trim() !== '') {
-      setStep('start');
+        if (code === '51') {
+            startTest(name);
+        } else {
+            alert('Невірний код доступу!');
+        }
+    });
+
+    function startTest(name) {
+        document.querySelector('.container').classList.add('hidden');
+        testContainer.classList.remove('hidden');
+        testContainer.innerHTML = `
+            <h1>Тестування</h1>
+            <p>Учень: ${name}</p>
+            <div id="questions"></div>
+            <button id="finishTest" class="btn">Завершити тестування</button>
+        `;
+
+        const questionsDiv = document.getElementById('questions');
+        testQuestions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.innerHTML = `
+                <h3>Питання ${index + 1}: ${q.question}</h3>
+                ${q.options.map((option, i) => `
+                    <div>
+                        <input type="radio" id="q${index}_${i}" name="q${index}" value="${i}">
+                        <label for="q${index}_${i}">${option}</label>
+                    </div>
+                `).join('')}
+            `;
+            questionsDiv.appendChild(questionDiv);
+        });
+
+        document.getElementById('finishTest').addEventListener('click', function() {
+            finishTest(name);
+        });
     }
-  };
 
-  const handleStartQuiz = () => {
-    setStep('quiz');
-  };
+    function finishTest(name) {
+        let score = 0;
+        testQuestions.forEach((q, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            if (selected && parseInt(selected.value) === q.answer) {
+                score++;
+            }
+        });
 
-  const handleAnswer = (option) => {
-    const newAnswers = [...answers];
-    newAnswers[current] = { question: questions[current].question, selected: option };
-    setAnswers(newAnswers);
-  };
+        testContainer.innerHTML = `
+            <h1>Результати тестування</h1>
+            <p>Учень: ${name}</p>
+            <p>Ваш результат: ${score} з ${testQuestions.length}</p>
+            <p>Відсоток правильних відповідей: ${Math.round((score / testQuestions.length) * 100)}%</p>
+            <button id="viewAnalytics" class="btn">Переглянути аналітику</button>
+        `;
 
-  const handleNext = () => {
-    if (current + 1 < questions.length) {
-      setCurrent(current + 1);
+        document.getElementById('viewAnalytics').addEventListener('click', function() {
+            showAnalytics();
+        });
     }
-  };
 
-  const handleFinish = () => {
-    const correctCount = answers.filter((a, i) => a?.selected === questions[i].answer).length;
-    setResult({ name, correct: correctCount, total: questions.length });
-    setStep('result');
-    // Тут можна відправити аналітику в API або базу даних
-    console.log({ name, answers, correctCount });
-  };
+    function showAnalytics() {
+        // Тут може бути код для відображення аналітики
+        // Наприклад, статистика по всім користувачам (якщо ви зберігаєте дані)
+        testContainer.innerHTML = `
+            <h1>Аналітика</h1>
+            <p>Тут може бути статистика по всім тестуванням:</p>
+            <ul>
+                <li>Середній бал: --</li>
+                <li>Найскладніше питання: --</li>
+                <li>Кількість пройдених тестів: --</li>
+            </ul>
+            <button id="backToStart" class="btn">На початок</button>
+        `;
 
-  return (
-    <div className="p-6 max-w-xl mx-auto">
-      {step === 'login' && (
-        <Card>
-          <CardContent className="space-y-4">
-            <h1 className="text-xl font-bold">Розпочати тестування</h1>
-            <input
-              type="text"
-              placeholder="Ім’я"
-              className="border rounded p-2 w-full"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Код"
-              className="border rounded p-2 w-full"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-            <Button onClick={handleLogin}>Розпочати тестування</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 'start' && (
-        <Card>
-          <CardContent className="space-y-4">
-            <h2 className="text-lg font-semibold">Назва тесту: Столиці світу</h2>
-            <Button onClick={handleStartQuiz}>Почати</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 'quiz' && (
-        <Card>
-          <CardContent className="space-y-4">
-            <h2 className="text-lg font-semibold">{questions[current].question}</h2>
-            {questions[current].options.map((option) => (
-              <Button key={option} onClick={() => handleAnswer(option)}>{option}</Button>
-            ))}
-            {current + 1 < questions.length ? (
-              <Button onClick={handleNext}>Далі</Button>
-            ) : (
-              <Button onClick={handleFinish}>Завершити тестування</Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 'result' && result && (
-        <Card>
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-bold">Результат</h2>
-            <p>Ім’я: {result.name}</p>
-            <p>Правильних відповідей: {result.correct} з {result.total}</p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
+        document.getElementById('backToStart').addEventListener('click', function() {
+            location.reload();
+        });
+    }
+});
