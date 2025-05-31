@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пробний тест</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        #start-screen, #test-screen, #result-screen {
+            text-align: center;
+        }
+        #test-screen, #result-screen {
+            display: none;
+        }
+        .question {
+            margin-bottom: 25px;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .timer {
+            font-size: 24px;
+            color: #d9534f;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        button {
+            background: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+        #result {
+            font-size: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Стартовий екран -->
+    <div id="start-screen">
+        <h1>Пробний тест</h1>
+        <p>Тест містить 5 питань з однією правильною відповіддю. У вас є 10 хвилин.</p>
+        <button id="start-btn">Розпочати тестування</button>
+    </div>
+
+    <!-- Екран тесту -->
+    <div id="test-screen">
+        <div class="timer" id="timer">10:00</div>
+        
+        <form id="quiz-form">
+            <div class="question">
+                <p>1. Яка столиця України?</p>
+                <input type="radio" name="q1" id="q1_a1" value="0"> <label for="q1_a1">Львів</label><br>
+                <input type="radio" name="q1" id="q1_a2" value="1"> <label for="q1_a2">Київ</label><br>
+                <input type="radio" name="q1" id="q1_a3" value="0"> <label for="q1_a3">Одеса</label>
+            </div>
+
+            <div class="question">
+                <p>2. Як називається найбільший океан на Землі?</p>
+                <input type="radio" name="q2" id="q2_a1" value="0"> <label for="q2_a1">Атлантичний</label><br>
+                <input type="radio" name="q2" id="q2_a2" value="1"> <label for="q2_a2">Тихий</label><br>
+                <input type="radio" name="q2" id="q2_a3" value="0"> <label for="q2_a3">Індійський</label>
+            </div>
+
+            <div class="question">
+                <p>3. Скільки планет в Сонячній системі?</p>
+                <input type="radio" name="q3" id="q3_a1" value="0"> <label for="q3_a1">7</label><br>
+                <input type="radio" name="q3" id="q3_a2" value="1"> <label for="q3_a2">8</label><br>
+                <input type="radio" name="q3" id="q3_a3" value="0"> <label for="q3_a3">9</label>
+            </div>
+
+            <div class="question">
+                <p>4. Який хімічний символ позначає золото?</p>
+                <input type="radio" name="q4" id="q4_a1" value="0"> <label for="q4_a1">Ag</label><br>
+                <input type="radio" name="q4" id="q4_a2" value="1"> <label for="q4_a2">Au</label><br>
+                <input type="radio" name="q4" id="q4_a3" value="0"> <label for="q4_a3">Fe</label>
+            </div>
+
+            <div class="question">
+                <p>5. Хто написав картину "Мона Ліза"?</p>
+                <input type="radio" name="q5" id="q5_a1" value="0"> <label for="q5_a1">Пабло Пікассо</label><br>
+                <input type="radio" name="q5" id="q5_a2" value="1"> <label for="q5_a2">Леонардо да Вінчі</label><br>
+                <input type="radio" name="q5" id="q5_a3" value="0"> <label for="q5_a3">Вінсент ван Гог</label>
+            </div>
+
+            <button type="button" id="submit-btn">Завершити тест</button>
+        </form>
+    </div>
+
+    <!-- Екран результатів -->
+    <div id="result-screen">
+        <h1>Результати тесту</h1>
+        <div id="result"></div>
+        <button id="restart-btn">Пройти тест знову</button>
+    </div>
+
+    <script>
+        // Елементи
+        const startScreen = document.getElementById('start-screen');
+        const testScreen = document.getElementById('test-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const startBtn = document.getElementById('start-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const timerDisplay = document.getElementById('timer');
+        const resultDisplay = document.getElementById('result');
+        const quizForm = document.getElementById('quiz-form');
+
+        // Змінні
+        let timeLeft = 600; // 10 хвилин у секундах
+        let timer;
+
+        // Правильні відповіді
+        const correctAnswers = {
+            q1: "1",
+            q2: "1",
+            q3: "1",
+            q4: "1",
+            q5: "1"
+        };
+
+        // Початок тесту
+        startBtn.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            testScreen.style.display = 'block';
+            startTimer();
+        });
+
+        // Таймер
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitTest();
+                }
+            }, 1000);
+        }
+
+        // Завершення тесту
+        submitBtn.addEventListener('click', submitTest);
+
+        function submitTest() {
+            clearInterval(timer);
+            
+            // Перевірка відповідей
+            let score = 0;
+            const formData = new FormData(quizForm);
+            
+            for (const [question, answer] of formData.entries()) {
+                if (answer === correctAnswers[question]) {
+                    score++;
+                }
+            }
+
+            // Показ результатів
+            testScreen.style.display = 'none';
+            resultScreen.style.display = 'block';
+            resultDisplay.innerHTML = `Ви набрали <strong>${score}</strong> з 5 балів!`;
+        }
+
+        // Перезапуск тесту
+        restartBtn.addEventListener('click', () => {
+            timeLeft = 600;
+            quizForm.reset();
+            resultScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
