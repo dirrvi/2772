@@ -1,258 +1,110 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тест "Столиці світу"</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-        }
-        .auth-form input {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .timer {
-            font-size: 24px;
-            text-align: center;
-            margin: 20px 0;
-            color: #e74c3c;
-        }
-        .question {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #ecf0f1;
-            border-radius: 5px;
-        }
-        .options label {
-            display: block;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 20px 0;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #2ecc71;
-            color: white;
-            border-radius: 5px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div id="auth-screen">
-            <h1>Тест "Столиці світу"</h1>
-            <div class="auth-form">
-                <input type="text" id="student-name" placeholder="Ваше ім'я" required>
-                <input type="password" id="access-code" placeholder="Спецкод" required>
-                <button id="login-btn">Почати тест</button>
-                <p id="auth-error" style="color: red; display: none;">Невірний спецкод! Спробуйте ще раз.</p>
-            </div>
-        </div>
-        
-        <div id="test-screen" style="display: none;">
-            <div class="timer">Час: <span id="time">25:00</span></div>
-            <div id="questions-container"></div>
-            <button id="finish-btn">Завершити тест</button>
-        </div>
-        
-        <div id="result-screen" class="result" style="display: none;">
-            <h2>Ваш результат</h2>
-            <div id="result-text"></div>
-        </div>
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
+const questions = [
+  { question: 'Столиця Франції?', options: ['Париж', 'Берлін', 'Мадрид'], answer: 'Париж' },
+  { question: 'Столиця Японії?', options: ['Пекін', 'Токіо', 'Сеул'], answer: 'Токіо' },
+  // Додай ще 10 питань у цьому ж форматі
+];
+
+export default function CapitalsQuizApp() {
+  const [step, setStep] = useState('login');
+  const [name, setName] = useState('');
+  const [code, setCode] = useState('');
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [result, setResult] = useState(null);
+
+  const handleLogin = () => {
+    if (code === '51' && name.trim() !== '') {
+      setStep('start');
+    }
+  };
+
+  const handleStartQuiz = () => {
+    setStep('quiz');
+  };
+
+  const handleAnswer = (option) => {
+    const newAnswers = [...answers];
+    newAnswers[current] = { question: questions[current].question, selected: option };
+    setAnswers(newAnswers);
+  };
+
+  const handleNext = () => {
+    if (current + 1 < questions.length) {
+      setCurrent(current + 1);
+    }
+  };
+
+  const handleFinish = () => {
+    const correctCount = answers.filter((a, i) => a?.selected === questions[i].answer).length;
+    setResult({ name, correct: correctCount, total: questions.length });
+    setStep('result');
+    // Тут можна відправити аналітику в API або базу даних
+    console.log({ name, answers, correctCount });
+  };
+
+  return (
+    <div className="p-6 max-w-xl mx-auto">
+      {step === 'login' && (
+        <Card>
+          <CardContent className="space-y-4">
+            <h1 className="text-xl font-bold">Розпочати тестування</h1>
+            <input
+              type="text"
+              placeholder="Ім’я"
+              className="border rounded p-2 w-full"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Код"
+              className="border rounded p-2 w-full"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            <Button onClick={handleLogin}>Розпочати тестування</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'start' && (
+        <Card>
+          <CardContent className="space-y-4">
+            <h2 className="text-lg font-semibold">Назва тесту: Столиці світу</h2>
+            <Button onClick={handleStartQuiz}>Почати</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'quiz' && (
+        <Card>
+          <CardContent className="space-y-4">
+            <h2 className="text-lg font-semibold">{questions[current].question}</h2>
+            {questions[current].options.map((option) => (
+              <Button key={option} onClick={() => handleAnswer(option)}>{option}</Button>
+            ))}
+            {current + 1 < questions.length ? (
+              <Button onClick={handleNext}>Далі</Button>
+            ) : (
+              <Button onClick={handleFinish}>Завершити тестування</Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'result' && result && (
+        <Card>
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-bold">Результат</h2>
+            <p>Ім’я: {result.name}</p>
+            <p>Правильних відповідей: {result.correct} з {result.total}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
-
-    <script>
-        // Питання тесту
-        const questions = [
-            {
-                question: "Столиця Франції?",
-                options: ["Берлін", "Мадрид", "Париж", "Рим"],
-                correct: 2
-            },
-            {
-                question: "Столиця Японії?",
-                options: ["Пекін", "Сеул", "Токіо", "Бангкок"],
-                correct: 2
-            },
-            // Інші питання...
-        ];
-
-        // Змінні
-        let currentQuestion = 0;
-        let score = 0;
-        let timeLeft = 25 * 60;
-        let timer;
-        let studentName = "";
-        let userAnswers = new Array(questions.length).fill(null);
-
-        // Елементи
-        const authScreen = document.getElementById("auth-screen");
-        const testScreen = document.getElementById("test-screen");
-        const resultScreen = document.getElementById("result-screen");
-        const loginBtn = document.getElementById("login-btn");
-        const finishBtn = document.getElementById("finish-btn");
-
-        // Обробник авторизації
-        loginBtn.addEventListener("click", () => {
-            const nameInput = document.getElementById("student-name");
-            const codeInput = document.getElementById("access-code");
-            
-            if (codeInput.value === "836") {
-                studentName = nameInput.value;
-                authScreen.style.display = "none";
-                testScreen.style.display = "block";
-                startTest();
-            } else {
-                document.getElementById("auth-error").style.display = "block";
-            }
-        });
-
-        // Запуск тесту
-        function startTest() {
-            timer = setInterval(() => {
-                timeLeft--;
-                updateTimer();
-                if (timeLeft <= 0) finishTest();
-            }, 1000);
-            showQuestion();
-        }
-
-        // Оновлення таймера
-        function updateTimer() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            document.getElementById("time").textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        // Показ питання
-        function showQuestion() {
-            const container = document.getElementById("questions-container");
-            const q = questions[currentQuestion];
-            
-            container.innerHTML = `
-                <div class="question">
-                    <h3>Питання ${currentQuestion + 1}/${questions.length}</h3>
-                    <p>${q.question}</p>
-                    <div class="options">
-                        ${q.options.map((option, i) => `
-                            <label>
-                                <input type="radio" name="answer" value="${i}" 
-                                    ${userAnswers[currentQuestion] === i ? "checked" : ""}>
-                                ${option}
-                            </label>
-                        `).join("")}
-                    </div>
-                </div>
-                <div class="nav-buttons">
-                    ${currentQuestion > 0 ? 
-                        '<button id="prev-btn">Назад</button>' : ''}
-                    ${currentQuestion < questions.length - 1 ? 
-                        '<button id="next-btn">Далі</button>' : ''}
-                </div>
-            `;
-            
-            // Обробники подій
-            document.querySelectorAll('input[name="answer"]').forEach(input => {
-                input.addEventListener("change", (e) => {
-                    userAnswers[currentQuestion] = parseInt(e.target.value);
-                });
-            });
-            
-            if (currentQuestion > 0) {
-                document.getElementById("prev-btn").addEventListener("click", () => {
-                    currentQuestion--;
-                    showQuestion();
-                });
-            }
-            
-            if (currentQuestion < questions.length - 1) {
-                document.getElementById("next-btn").addEventListener("click", () => {
-                    currentQuestion++;
-                    showQuestion();
-                });
-            }
-        }
-
-        // Завершення тесту
-        finishBtn.addEventListener("click", finishTest);
-
-        function finishTest() {
-            clearInterval(timer);
-            
-            // Підрахунок балів
-            score = 0;
-            userAnswers.forEach((answer, i) => {
-                if (answer === questions[i].correct) score++;
-            });
-            
-            // Показ результатів
-            testScreen.style.display = "none";
-            resultScreen.style.display = "block";
-            document.getElementById("result-text").innerHTML = `
-                <p><strong>${studentName}</strong>, ваш результат:</p>
-                <p>${score} з ${questions.length} (<strong>${Math.round(score/questions.length*100)}%</strong>)</p>
-                <p>Час завершення: ${new Date().toLocaleTimeString()}</p>
-            `;
-            
-            // Збереження результатів
-            saveResults();
-        }
-
-        function saveResults() {
-            const results = JSON.parse(localStorage.getItem("testResults") || "[]");
-            
-            results.push({
-                name: studentName,
-                score: score,
-                maxScore: questions.length,
-                answers: userAnswers.map((ans, i) => ({
-                    question: questions[i].question,
-                    userAnswer: ans !== null ? questions[i].options[ans] : "Не відповів",
-                    correctAnswer: questions[i].options[questions[i].correct],
-                    isCorrect: ans === questions[i].correct
-                })),
-                date: new Date().toLocaleString()
-            });
-            
-            localStorage.setItem("testResults", JSON.stringify(results));
-            console.log("Результати збережено:", results);
-        }
-    </script>
-</body>
-</html>
+  );
+}
