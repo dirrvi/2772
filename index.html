@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система тестування</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .options {
+            margin-top: 10px;
+        }
+        .option {
+            margin: 5px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        .result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .correct {
+            background-color: #d4edda;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+        }
+        .progress {
+            margin: 20px 0;
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 5px;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="login-container">
+        <h1>Вхід до системи тестування</h1>
+        <div class="form-group">
+            <label for="name">Ім'я:</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label for="code">Код доступу:</label>
+            <input type="password" id="code" required>
+        </div>
+        <button id="start-btn">Розпочати тестування</button>
+    </div>
+
+    <div class="container hidden" id="quiz-container">
+        <h1>Тестування знань</h1>
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div id="question-container"></div>
+        <button id="next-btn" class="hidden">Наступне питання</button>
+        <button id="finish-btn" class="hidden">Завершити тестування</button>
+    </div>
+
+    <div class="container hidden" id="result-container">
+        <h1>Результати тестування</h1>
+        <div id="score-container"></div>
+        <h2>Детальні результати</h2>
+        <div id="detailed-results"></div>
+        <button id="restart-btn">Пройти тест знову</button>
+        <button id="analytics-btn">Переглянути аналітику</button>
+    </div>
+
+    <div class="container hidden" id="analytics-container">
+        <h1>Аналітика тестування</h1>
+        <div id="analytics-data"></div>
+        <button id="back-btn">Повернутися до результатів</button>
+    </div>
+
+    <script>
+        // Питання для тесту
+        const questions = [
+            {
+                question: "Яка столиця України?",
+                options: ["Львів", "Київ", "Одеса", "Харків"],
+                answer: 1
+            },
+            {
+                question: "2 + 2 = ?",
+                options: ["3", "4", "5", "6"],
+                answer: 1
+            },
+            {
+                question: "Яка найдовша річка в Україні?",
+                options: ["Дніпро", "Дунай", "Дністер", "Південний Буг"],
+                answer: 0
+            }
+            // Додайте більше питань за потреби
+        ];
+
+        // Елементи DOM
+        const loginContainer = document.getElementById('login-container');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultContainer = document.getElementById('result-container');
+        const analyticsContainer = document.getElementById('analytics-container');
+        const questionContainer = document.getElementById('question-container');
+        const progressBar = document.getElementById('progress-bar');
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const scoreContainer = document.getElementById('score-container');
+        const detailedResults = document.getElementById('detailed-results');
+        const analyticsData = document.getElementById('analytics-data');
+
+        // Змінні стану
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let userName = '';
+        let testResults = [];
+
+        // Початок тестування
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const name = document.getElementById('name').value;
+            const code = document.getElementById('code').value;
+
+            if (name.trim() === '' || code !== '51') {
+                alert('Будь ласка, введіть коректні дані!');
+                return;
+            }
+
+            userName = name;
+            loginContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            showQuestion();
+        });
+
+        // Відображення питання
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            let html = `
+                <div class="question">
+                    <h2>Питання ${currentQuestion + 1} з ${questions.length}</h2>
+                    <p>${question.question}</p>
+                    <div class="options">
+            `;
+
+            question.options.forEach((option, index) => {
+                html += `
+                    <div class="option">
+                        <input type="radio" name="answer" id="option-${index}" value="${index}">
+                        <label for="option-${index}">${option}</label>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            questionContainer.innerHTML = html;
+
+            // Оновлення прогресу
+            progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+
+            // Показати відповідні кнопки
+            nextBtn.classList.toggle('hidden', currentQuestion === questions.length - 1);
+            finishBtn.classList.toggle('hidden', currentQuestion !== questions.length - 1);
+        }
+
+        // Наступне питання
+        nextBtn.addEventListener('click', () => {
+            saveAnswer();
+            currentQuestion++;
+            showQuestion();
+        });
+
+        // Завершення тесту
+        finishBtn.addEventListener('click', () => {
+            saveAnswer();
+            showResults();
+        });
+
+        // Збереження відповіді
+        function saveAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            userAnswers[currentQuestion] = selectedOption ? parseInt(selectedOption.value) : null;
+        }
+
+        // Показ результатів
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            // Підрахунок балів
+            let correctAnswers = 0;
+            questions.forEach((q, index) => {
+                if (userAnswers[index] === q.answer) {
+                    correctAnswers++;
+                }
+            });
+
+            const percentage = Math.round((correctAnswers / questions.length) * 100);
+
+            // Відображення загальних результатів
+            scoreContainer.innerHTML = `
+                <p><strong>Учень:</strong> ${userName}</p>
+                <p><strong>Правильних відповідей:</strong> ${correctAnswers} з ${questions.length}</p>
+                <p><strong>Відсоток успішності:</strong> ${percentage}%</p>
+            `;
+
+            // Деталізація по кожному питанню
+            detailedResults.innerHTML = '';
+            questions.forEach((q, index) => {
+                const isCorrect = userAnswers[index] === q.answer;
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `result-item ${isCorrect ? 'correct' : 'incorrect'}`;
+                resultDiv.innerHTML = `
+                    <p><strong>Питання:</strong> ${q.question}</p>
+                    <p><strong>Ваша відповідь:</strong> ${userAnswers[index] !== null ? q.options[userAnswers[index]] : 'Немає відповіді'}</p>
+                    <p><strong>Правильна відповідь:</strong> ${q.options[q.answer]}</p>
+                    <p><strong>Результат:</strong> ${isCorrect ? 'Правильно' : 'Неправильно'}</p>
+                `;
+                detailedResults.appendChild(resultDiv);
+            });
+
+            // Збереження результатів для аналітики
+            testResults.push({
+                name: userName,
+                date: new Date().toLocaleString(),
+                score: correctAnswers,
+                total: questions.length,
+                percentage: percentage
+            });
+        }
+
+        // Кнопки управління
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            currentQuestion = 0;
+            userAnswers = [];
+            resultContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            showQuestion();
+        });
+
+        document.getElementById('analytics-btn').addEventListener('click', showAnalytics);
+        document.getElementById('back-btn').addEventListener('click', () => {
+            analyticsContainer.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+        });
+
+        // Показ аналітики
+        function showAnalytics() {
+            resultContainer.classList.add('hidden');
+            analyticsContainer.classList.remove('hidden');
+
+            if (testResults.length === 0) {
+                analyticsData.innerHTML = '<p>Ще немає даних для аналітики.</p>';
+                return;
+            }
+
+            let html = '<h2>Результати всіх тестувань</h2>';
+            
+            // Загальна статистика
+            const totalTests = testResults.length;
+            const avgPercentage = Math.round(testResults.reduce((sum, result) => sum + result.percentage, 0) / totalTests);
+            
+            html += `
+                <div class="result-item">
+                    <p><strong>Всього тестувань:</strong> ${totalTests}</p>
+                    <p><strong>Середній відсоток успішності:</strong> ${avgPercentage}%</p>
+                </div>
+            `;
+
+            // Деталі по кожному тестуванню
+            testResults.forEach((result, index) => {
+                html += `
+                    <div class="result-item">
+                        <p><strong>Тестування #${index + 1}</strong></p>
+                        <p>Учень: ${result.name}</p>
+                        <p>Дата: ${result.date}</p>
+                        <p>Результат: ${result.score}/${result.total} (${result.percentage}%)</p>
+                    </div>
+                `;
+            });
+
+            analyticsData.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
