@@ -1,0 +1,109 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const testContainer = document.createElement('div');
+    testContainer.className = 'container hidden';
+    document.body.appendChild(testContainer);
+
+    // Приклад тесту (можна замінити на свої питання)
+    const testQuestions = [
+        {
+            question: "Яка столиця України?",
+            options: ["Львів", "Київ", "Одеса", "Харків"],
+            answer: 1
+        },
+        {
+            question: "2 + 2 = ?",
+            options: ["3", "4", "5", "6"],
+            answer: 1
+        },
+        {
+            question: "Яка найдовша річка в Україні?",
+            options: ["Дніпро", "Дунай", "Дністер", "Південний Буг"],
+            answer: 0
+        }
+    ];
+
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const code = document.getElementById('code').value;
+
+        if (code === '51') {
+            startTest(name);
+        } else {
+            alert('Невірний код доступу!');
+        }
+    });
+
+    function startTest(name) {
+        document.querySelector('.container').classList.add('hidden');
+        testContainer.classList.remove('hidden');
+        testContainer.innerHTML = `
+            <h1>Тестування</h1>
+            <p>Учень: ${name}</p>
+            <div id="questions"></div>
+            <button id="finishTest" class="btn">Завершити тестування</button>
+        `;
+
+        const questionsDiv = document.getElementById('questions');
+        testQuestions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.innerHTML = `
+                <h3>Питання ${index + 1}: ${q.question}</h3>
+                ${q.options.map((option, i) => `
+                    <div>
+                        <input type="radio" id="q${index}_${i}" name="q${index}" value="${i}">
+                        <label for="q${index}_${i}">${option}</label>
+                    </div>
+                `).join('')}
+            `;
+            questionsDiv.appendChild(questionDiv);
+        });
+
+        document.getElementById('finishTest').addEventListener('click', function() {
+            finishTest(name);
+        });
+    }
+
+    function finishTest(name) {
+        let score = 0;
+        testQuestions.forEach((q, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            if (selected && parseInt(selected.value) === q.answer) {
+                score++;
+            }
+        });
+
+        testContainer.innerHTML = `
+            <h1>Результати тестування</h1>
+            <p>Учень: ${name}</p>
+            <p>Ваш результат: ${score} з ${testQuestions.length}</p>
+            <p>Відсоток правильних відповідей: ${Math.round((score / testQuestions.length) * 100)}%</p>
+            <button id="viewAnalytics" class="btn">Переглянути аналітику</button>
+        `;
+
+        document.getElementById('viewAnalytics').addEventListener('click', function() {
+            showAnalytics();
+        });
+    }
+
+    function showAnalytics() {
+        // Тут може бути код для відображення аналітики
+        // Наприклад, статистика по всім користувачам (якщо ви зберігаєте дані)
+        testContainer.innerHTML = `
+            <h1>Аналітика</h1>
+            <p>Тут може бути статистика по всім тестуванням:</p>
+            <ul>
+                <li>Середній бал: --</li>
+                <li>Найскладніше питання: --</li>
+                <li>Кількість пройдених тестів: --</li>
+            </ul>
+            <button id="backToStart" class="btn">На початок</button>
+        `;
+
+        document.getElementById('backToStart').addEventListener('click', function() {
+            location.reload();
+        });
+    }
+});
