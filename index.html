@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест "Столиці"</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .option {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .option.selected {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .option.correct {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #2ecc71;
+        }
+        .option.incorrect {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+        .hidden {
+            display: none;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .result-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .analytics-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .correct-answer {
+            color: #2ecc71;
+        }
+        .wrong-answer {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-page" class="card">
+        <h1>Тест "Столиці"</h1>
+        <div class="form-group">
+            <label for="student-name">Ваше ім'я:</label>
+            <input type="text" id="student-name" placeholder="Введіть ваше ім'я">
+        </div>
+        <div class="form-group">
+            <label for="student-code">Спец. код:</label>
+            <input type="password" id="student-code" placeholder="Введіть спеціальний код">
+        </div>
+        <button id="start-btn">Розпочати тестування</button>
+    </div>
+
+    <div id="quiz-container" class="card hidden">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div id="question-container"></div>
+        <button id="next-btn" class="hidden">Наступне питання</button>
+        <button id="finish-btn" class="hidden">Завершити тестування</button>
+    </div>
+
+    <div id="result-page" class="card hidden">
+        <div class="result-circle">
+            <span id="score-display"></span>
+            <span style="font-size: 16px;">з 12</span>
+        </div>
+        <h2 style="text-align: center;">Результат тестування</h2>
+        <button id="analytics-btn">Переглянути аналітику</button>
+        <button id="restart-btn" class="btn-secondary">Пройти тест знову</button>
+    </div>
+
+    <div id="analytics-page" class="card hidden">
+        <h2 style="text-align: center;">Ваші відповіді</h2>
+        <div id="analytics-results"></div>
+        <button id="back-to-results" class="btn-secondary">Повернутись до результатів</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Яка столиця України?",
+                options: ["Львів", "Київ", "Одеса", "Харків"],
+                answer: "Київ"
+            },
+            {
+                question: "Яка столиця Франції?",
+                options: ["Берлін", "Мадрид", "Париж", "Рим"],
+                answer: "Париж"
+            },
+            {
+                question: "Яка столиця Німеччини?",
+                options: ["Мюнхен", "Берлін", "Гамбург", "Франкфурт"],
+                answer: "Берлін"
+            },
+            {
+                question: "Яка столиця Італії?",
+                options: ["Венеція", "Мілан", "Рим", "Неаполь"],
+                answer: "Рим"
+            },
+            {
+                question: "Яка столиця Великобританії?",
+                options: ["Ліверпуль", "Манчестер", "Лондон", "Единбург"],
+                answer: "Лондон"
+            },
+            {
+                question: "Яка столиця Польщі?",
+                options: ["Краків", "Варшава", "Гданськ", "Вроцлав"],
+                answer: "Варшава"
+            },
+            {
+                question: "Яка столиця США?",
+                options: ["Нью-Йорк", "Вашингтон", "Лос-Анджелес", "Чикаго"],
+                answer: "Вашингтон"
+            },
+            {
+                question: "Яка столиця Канади?",
+                options: ["Торонто", "Ванкувер", "Оттава", "Монреаль"],
+                answer: "Оттава"
+            },
+            {
+                question: "Яка столиця Японії?",
+                options: ["Осака", "Кіото", "Токіо", "Хіросіма"],
+                answer: "Токіо"
+            },
+            {
+                question: "Яка столиця Австралії?",
+                options: ["Сідней", "Мельбурн", "Канберра", "Брисбен"],
+                answer: "Канберра"
+            },
+            {
+                question: "Яка столиця Бразилії?",
+                options: ["Ріо-де-Жанейро", "Сан-Паулу", "Бразиліа", "Сальвадор"],
+                answer: "Бразиліа"
+            },
+            {
+                question: "Яка столиця Південної Кореї?",
+                options: ["Пусан", "Сеул", "Інчхон", "Теджон"],
+                answer: "Сеул"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+        const studentAnswers = [];
+        let studentName = "";
+
+        document.getElementById('start-btn').addEventListener('click', startQuiz);
+        document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        document.getElementById('finish-btn').addEventListener('click', finishQuiz);
+        document.getElementById('analytics-btn').addEventListener('click', showAnalytics);
+        document.getElementById('back-to-results').addEventListener('click', backToResults);
+        document.getElementById('restart-btn').addEventListener('click', restartQuiz);
+
+        function startQuiz() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            const codeInput = document.getElementById('student-code').value;
+            
+            if (!nameInput) {
+                alert("Будь ласка, введіть ваше ім'я");
+                return;
+            }
+            
+            if (codeInput !== "29") {
+                alert("Невірний спеціальний код");
+                return;
+            }
+            
+            studentName = nameInput;
+            document.getElementById('start-page').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionContainer = document.getElementById('question-container');
+            questionContainer.innerHTML = '';
+
+            const questionDiv = document.createElement('div');
+            questionDiv.innerHTML = `
+                <h3>Питання ${currentQuestion + 1} з ${questions.length}</h3>
+                <p>${questions[currentQuestion].question}</p>
+                <div class="options">
+                    ${questions[currentQuestion].options.map(option => 
+                        `<div class="option" data-option="${option}">${option}</div>`
+                    ).join('')}
+                </div>
+            `;
+
+            questionContainer.appendChild(questionDiv);
+
+            // Оновити прогрес бар
+            document.getElementById('progress').style.width = `${(currentQuestion / questions.length) * 100}%`;
+
+            // Налаштувати обробники подій для варіантів відповідей
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.classList.contains('selected')) return;
+                    
+                    // Зняти виділення з інших варіантів
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Виділити обраний варіант
+                    this.classList.add('selected');
+                    selectedOption = this.getAttribute('data-option');
+                    
+                    // Показати кнопку "Далі"
+                    if (currentQuestion === questions.length - 1) {
+                        document.getElementById('finish-btn').classList.remove('hidden');
+                    } else {
+                        document.getElementById('next-btn').classList.remove('hidden');
+                    }
+                });
+            });
+        }
+
+        function nextQuestion() {
+            // Зберегти відповідь
+            saveAnswer();
+            
+            // Перейти до наступного питання
+            currentQuestion++;
+            selectedOption = null;
+            document.getElementById('next-btn').classList.add('hidden');
+            showQuestion();
+        }
+
+        function saveAnswer() {
+            if (selectedOption === null) return;
+            
+            const isCorrect = selectedOption === questions[currentQuestion].answer;
+            if (isCorrect) score++;
+            
+            studentAnswers.push({
+                question: questions[currentQuestion].question,
+                selected: selectedOption,
+                correct: questions[currentQuestion].answer,
+                isCorrect: isCorrect
+            });
+        }
+
+        function finishQuiz() {
+            saveAnswer();
+            
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            document.getElementById('score-display').textContent = score;
+        }
+
+        function showAnalytics() {
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('analytics-page').classList.remove('hidden');
+            
+            const analyticsResults = document.getElementById('analytics-results');
+            analyticsResults.innerHTML = '';
+            
+            studentAnswers.forEach((answer, index) => {
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'analytics-item';
+                answerDiv.innerHTML = `
+                    <h4>Питання ${index + 1}: ${answer.question}</h4>
+                    <p>Ваша відповідь: <span class="${answer.isCorrect ? 'correct-answer' : 'wrong-answer'}">${answer.selected}</span></p>
+                    <p>Правильна відповідь: ${answer.correct}</p>
+                    <p>Статус: ${answer.isCorrect ? 'Правильно' : 'Неправильно'}</p>
+                `;
+                analyticsResults.appendChild(answerDiv);
+            });
+        }
+
+        function backToResults() {
+            document.getElementById('analytics-page').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedOption = null;
+            studentAnswers.length = 0;
+            
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('analytics-page').classList.add('hidden');
+            document.getElementById('start-page').classList.remove('hidden');
+            
+            // Очистити поля вводу
+            document.getElementById('student-name').value = '';
+            document.getElementById('student-code').value = '';
+        }
+    </script>
+</body>
+</html>
