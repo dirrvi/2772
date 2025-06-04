@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн касса АТБ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 150px;
+        }
+        .product-list {
+            margin-bottom: 20px;
+        }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .product-item:last-child {
+            border-bottom: none;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 20px 0;
+            text-align: right;
+        }
+        .payment-methods {
+            margin-bottom: 20px;
+        }
+        .payment-method {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .payment-method.selected {
+            background-color: #e0f7fa;
+            border-color: #4dd0e1;
+        }
+        .payment-details {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1b5e20;
+        }
+        button.secondary {
+            background-color: #f44336;
+        }
+        button.secondary:hover {
+            background-color: #c62828;
+        }
+        .receipt {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border: 1px dashed #ccc;
+            display: none;
+        }
+        .terminal-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #c8e6c9;
+            color: #1b5e20;
+        }
+        .error {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        .processing {
+            background-color: #fff9c4;
+            color: #f57f17;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Онлайн касса АТБ</h1>
+        </div>
+        
+        <div class="product-list">
+            <h2>Товари в чеку:</h2>
+            <div id="products">
+                <!-- Товари будуть додаватися тут -->
+            </div>
+            <div class="total">
+                Разом: <span id="total-amount">0</span> ₴
+            </div>
+        </div>
+        
+        <div class="payment-methods">
+            <h2>Спосіб оплати:</h2>
+            
+            <div class="payment-method" onclick="selectPaymentMethod('cash')">
+                <input type="radio" name="payment" id="cash" value="cash">
+                <label for="cash">Готівка</label>
+                <div class="payment-details" id="cash-details">
+                    <p>Оплата готівкою при отриманні</p>
+                    <label for="cash-received">Сума від покупця:</label>
+                    <input type="number" id="cash-received" min="0" step="1" value="0" style="width: 100%; padding: 8px; margin: 5px 0;">
+                    <p>Решта: <span id="change-amount">0</span> ₴</p>
+                </div>
+            </div>
+            
+            <div class="payment-method" onclick="selectPaymentMethod('card')">
+                <input type="radio" name="payment" id="card" value="card">
+                <label for="card">Банківська картка</label>
+                <div class="payment-details" id="card-details">
+                    <p>Введіть дані картки:</p>
+                    <input type="text" placeholder="Номер картки" style="width: 100%; padding: 8px; margin: 5px 0;">
+                    <input type="text" placeholder="Термін дії" style="width: 100%; padding: 8px; margin: 5px 0;">
+                    <input type="text" placeholder="CVV" style="width: 100%; padding: 8px; margin: 5px 0;">
+                    <div id="terminal-status" class="terminal-status"></div>
+                </div>
+            </div>
+            
+            <div class="payment-method" onclick="selectPaymentMethod('bonus')">
+                <input type="radio" name="payment" id="bonus" value="bonus">
+                <label for="bonus">Бонусні бали</label>
+                <div class="payment-details" id="bonus-details">
+                    <p>Доступно балів: <span id="available-bonuses">150</span></p>
+                    <p>Списати балів: <input type="number" id="bonus-amount" min="0" max="150" value="0" style="width: 60px; padding: 5px;"></p>
+                    <p>Після списання балів до оплати: <span id="after-bonus">0</span> ₴</p>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="processPayment()">Оформити покупку</button>
+        <button class="secondary" onclick="clearCart()">Очистити корзину</button>
+        
+        <div class="receipt" id="receipt">
+            <h2>Чек АТБ</h2>
+            <div id="receipt-content"></div>
+            <p>Дякуємо за покупку!</p>
+        </div>
+    </div>
+
+    <script>
+        // Товари АТБ
+        const products = [
+            { id: 1, name: "Молоко 'Галичина' 1л", price: 32 },
+            { id: 2, name: "Хліб 'Білий' 400г", price: 18 },
+            { id: 3, name: "Яйця курячі 10шт", price: 45 },
+            { id: 4, name: "Цукор 1кг", price: 28 },
+            { id: 5, name: "Олія 'Олейна' 1л", price: 65 },
+            { id: 6, name: "Картопля 1кг", price: 12 },
+            { id: 7, name: "Кава 'Чорна карта' 100г", price: 55 },
+            { id: 8, name: "Чай 'Ліптон' 25 пак.", price: 42 },
+            { id: 9, name: "Пельмені 'Маріанна' 400г", price: 68 },
+            { id: 10, name: "Сосиски 'Фармер' 400г", price: 75 }
+        ];
+        
+        // Корзина
+        let cart = [];
+        let selectedPaymentMethod = null;
+        
+        // Ініціалізація сторінки
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProducts();
+            updateTotal();
+            
+            // Обробник зміни кількості бонусів
+            document.getElementById('bonus-amount').addEventListener('change', function() {
+                updateAfterBonus();
+            });
+            
+            // Обробник зміни суми від покупця
+            document.getElementById('cash-received').addEventListener('change', function() {
+                calculateChange();
+            });
+        });
+        
+        // Відображення списку товарів
+        function renderProducts() {
+            const productsContainer = document.getElementById('products');
+            productsContainer.innerHTML = '';
+            
+            products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                
+                const productInfo = document.createElement('div');
+                productInfo.textContent = `${product.name} - ${product.price} ₴`;
+                
+                const addButton = document.createElement('button');
+                addButton.textContent = 'Додати';
+                addButton.style.width = 'auto';
+                addButton.style.padding = '5px 10px';
+                addButton.style.margin = '0';
+                addButton.onclick = () => addToCart(product);
+                
+                productItem.appendChild(productInfo);
+                productItem.appendChild(addButton);
+                productsContainer.appendChild(productItem);
+            });
+            
+            // Відображення корзини
+            const cartContainer = document.createElement('div');
+            cartContainer.innerHTML = '<h3>Корзина:</h3>';
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML += '<p>Корзина порожня</p>';
+            } else {
+                cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'product-item';
+                    cartItem.textContent = `${item.name} - ${item.quantity} x ${item.price} ₴ = ${item.quantity * item.price} ₴`;
+                    
+                    const removeButton = document.createElement('button');
+                    removeButton.textContent = 'Видалити';
+                    removeButton.style.width = 'auto';
+                    removeButton.style.padding = '5px 10px';
+                    removeButton.style.margin = '0 0 0 10px';
+                    removeButton.style.backgroundColor = '#f44336';
+                    removeButton.onclick = () => removeFromCart(item.id);
+                    
+                    cartItem.appendChild(removeButton);
+                    cartContainer.appendChild(cartItem);
+                });
+            }
+            
+            productsContainer.appendChild(cartContainer);
+        }
+        
+        // Додавання товару в корзину
+        function addToCart(product) {
+            const existingItem = cart.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1
+                });
+            }
+            
+            renderProducts();
+            updateTotal();
+        }
+        
+        // Видалення товару з корзини
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            renderProducts();
+            updateTotal();
+        }
+        
+        // Очищення корзини
+        function clearCart() {
+            cart = [];
+            renderProducts();
+            updateTotal();
+            document.getElementById('receipt').style.display = 'none';
+        }
+        
+        // Оновлення загальної суми
+        function updateTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('total-amount').textContent = total;
+            updateAfterBonus();
+            calculateChange();
+        }
+        
+        // Вибір способу оплати
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            
+            // Знімаємо виділення з усіх методів
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Ховаємо всі деталі
+            document.querySelectorAll('.payment-details').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Виділяємо вибраний метод і показуємо деталі
+            const selectedElement = document.querySelector(`.payment-method input[value="${method}"]`).parentNode;
+            selectedElement.classList.add('selected');
+            document.getElementById(`${method}-details`).style.display = 'block';
+        }
+        
+        // Оновлення суми після списання бонусів
+        function updateAfterBonus() {
+            const total = parseFloat(document.getElementById('total-amount').textContent);
+            const bonusAmount = parseInt(document.getElementById('bonus-amount').value) || 0;
+            const availableBonuses = parseInt(document.getElementById('available-bonuses').textContent);
+            
+            // Перевіряємо, щоб не списати більше доступних бонусів
+            const actualBonus = Math.min(bonusAmount, availableBonuses, total);
+            document.getElementById('bonus-amount').value = actualBonus;
+            
+            const afterBonus = total - actualBonus;
+            document.getElementById('after-bonus').textContent = afterBonus.toFixed(2);
+        }
+        
+        // Розрахунок решти
+        function calculateChange() {
+            if (selectedPaymentMethod !== 'cash') return;
+            
+            const total = parseFloat(document.getElementById('total-amount').textContent);
+            const received = parseFloat(document.getElementById('cash-received').value) || 0;
+            
+            if (received >= total) {
+                document.getElementById('change-amount').textContent = (received - total).toFixed(2);
+            } else {
+                document.getElementById('change-amount').textContent = '0';
+            }
+        }
+        
+        // Імітація оплати карткою
+        function processCardPayment(total, callback) {
+            const terminalStatus = document.getElementById('terminal-status');
+            terminalStatus.style.display = 'block';
+            terminalStatus.className = 'terminal-status processing';
+            terminalStatus.textContent = 'З\'єднання з терміналом...';
+            
+            // Імітуємо затримку мережі
+            setTimeout(() => {
+                // Випадково визначаємо, чи пройшла оплата (80% шанс на успіх)
+                const isSuccess = Math.random() < 0.8;
+                
+                if (isSuccess) {
+                    terminalStatus.className = 'terminal-status success';
+                    terminalStatus.textContent = 'Оплата успішна! Сума: ' + total + ' ₴';
+                    callback(true);
+                } else {
+                    terminalStatus.className = 'terminal-status error';
+                    terminalStatus.textContent = 'Помилка оплати. Спробуйте ще раз або оберіть інший спосіб оплати.';
+                    callback(false);
+                }
+            }, 2000);
+        }
+        
+        // Обробка оплати
+        function processPayment() {
+            if (cart.length === 0) {
+                alert('Корзина порожня! Додайте товари перед оплатою.');
+                return;
+            }
+            
+            if (!selectedPaymentMethod) {
+                alert('Оберіть спосіб оплати!');
+                return;
+            }
+            
+            const total = parseFloat(document.getElementById('total-amount').textContent);
+            let paymentDetails = '';
+            
+            if (selectedPaymentMethod === 'cash') {
+                const received = parseFloat(document.getElementById('cash-received').value) || 0;
+                
+                if (received < total) {
+                    alert('Покупець дав недостатньо грошей!');
+                    return;
+                }
+                
+                const change = received - total;
+                paymentDetails = `Оплата готівкою: ${total} ₴\nСума від покупця: ${received} ₴\nРешта: ${change} ₴`;
+                
+                generateReceipt(total, paymentDetails);
+            } 
+            else if (selectedPaymentMethod === 'card') {
+                processCardPayment(total, (success) => {
+                    if (success) {
+                        paymentDetails = `Оплата карткою: ${total} ₴\nТранзакція успішна`;
+                        generateReceipt(total, paymentDetails);
+                    }
+                });
+                return; // Не генеруємо чек поки не завершиться оплата
+            }
+            else if (selectedPaymentMethod === 'bonus') {
+                const bonusAmount = parseInt(document.getElementById('bonus-amount').value) || 0;
+                const afterBonus = total - bonusAmount;
+                
+                if (afterBonus > 0) {
+                    paymentDetails = `Оплачено бонусами: ${bonusAmount} ₴\nДо оплати: ${afterBonus} ₴\nОберіть додатковий спосіб оплати`;
+                    alert('Для оплати залишку оберіть додатковий спосіб оплати (готівка або картка)');
+                    return;
+                } else {
+                    paymentDetails = `Оплачено повністю бонусами: ${bonusAmount} ₴`;
+                    generateReceipt(total, paymentDetails);
+                }
+            }
+        }
+        
+        // Генерація чека
+        function generateReceipt(total, paymentDetails) {
+            // Формування чека
+            let receiptContent = '<h3>Покупка:</h3>';
+            cart.forEach(item => {
+                receiptContent += `<p>${item.name} - ${item.quantity} x ${item.price} ₴ = ${item.quantity * item.price} ₴</p>`;
+            });
+            
+            receiptContent += `<h3>Разом: ${total} ₴</h3>`;
+            receiptContent += `<h3>Спосіб оплати: ${getPaymentMethodName(selectedPaymentMethod)}</h3>`;
+            receiptContent += `<p>${paymentDetails.replace(/\n/g, '<br>')}</p>`;
+            
+            document.getElementById('receipt').style.display = 'block';
+            document.getElementById('receipt-content').innerHTML = receiptContent;
+            
+            // Очищення корзини
+            cart = [];
+            renderProducts();
+            updateTotal();
+        }
+        
+        // Отримання назви способу оплати
+        function getPaymentMethodName(method) {
+            switch(method) {
+                case 'cash': return 'Готівка';
+                case 'card': return 'Банківська картка';
+                case 'bonus': return 'Бонусні бали';
+                default: return '';
+            }
+        }
+    </script>
+</body>
+</html>
