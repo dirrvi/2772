@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Перевірка тесту</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    .section {
+      display: none;
+    }
+    .visible {
+      display: block;
+    }
+    input, button {
+      padding: 8px;
+      margin-top: 10px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="step1" class="section visible">
+    <h2>Введіть ваше ім’я</h2>
+    <input type="text" id="username" placeholder="Ваше ім’я">
+    <button onclick="goToCode()">Далі</button>
+  </div>
+
+  <div id="step2" class="section">
+    <h2>Введіть код доступу</h2>
+    <input type="text" id="accessCode" placeholder="Код доступу">
+    <button onclick="checkCode()">Перевірити</button>
+    <p id="error" style="color: red;"></p>
+  </div>
+
+  <div id="step3" class="section">
+    <h2>Правильні відповіді</h2>
+    <ol id="answersList"></ol>
+  </div>
+
+  <script>
+    const correctAnswers = [
+      '1. В', '2. Б', '3. В', '4. А', '5. Б', '6. Б', '7. А', '8. В', '9. Б', '10. Б',
+      '11. Б', '12. Б', '13. Б', '14. Г', '15. В', '16. В', '17. Г', '18. В', '19. А', '20. Г',
+      '21. Г, А, Г, Б', '22. А, Б, В, Г', '23. А, Д, В, Б', '24. В, Б, А, Г',
+      '25. В, А, Г, Б', '26. А, В, Г, Б', '27. Б, Г, А, В',
+      '28. 1, 3, 5', '29. 2, 3, 6', '30. 2, 5, 6'
+    ];
+
+    function goToCode() {
+      const name = document.getElementById("username").value.trim();
+      if (name) {
+        document.getElementById("step1").classList.remove("visible");
+        document.getElementById("step2").classList.add("visible");
+      }
+    }
+
+    function checkCode() {
+      const code = document.getElementById("accessCode").value;
+      if (code === "856") {
+        document.getElementById("step2").classList.remove("visible");
+        document.getElementById("step3").classList.add("visible");
+        const list = document.getElementById("answersList");
+        correctAnswers.forEach(answer => {
+          const li = document.createElement("li");
+          li.textContent = answer;
+          list.appendChild(li);
+        });
+      } else {
+        document.getElementById("error").textContent = "Неправильний код!";
+      }
+    }
+  </script>
+</body>
+</html>
