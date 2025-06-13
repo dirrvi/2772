@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>НМТ з історії</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .section { display: none; }
+    .visible { display: block; }
+    .question { margin-bottom: 15px; }
+    .result { font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+
+<div id="step1" class="section visible">
+  <h2>Введіть ім’я</h2>
+  <input type="text" id="name" placeholder="Ім’я">
+  <button onclick="goToStep2()">Далі</button>
+</div>
+
+<div id="step2" class="section">
+  <h2>Введіть код доступу</h2>
+  <input type="text" id="code" placeholder="Код">
+  <button onclick="checkCode()">Увійти</button>
+  <p id="codeError" style="color:red;"></p>
+</div>
+
+<div id="test" class="section">
+  <h2>Тест з історії України</h2>
+  <form id="quizForm">
+    <div id="questionsContainer"></div>
+    <button type="button" onclick="submitTest()">Завершити роботу над тестом</button>
+  </form>
+  <div id="result" class="result"></div>
+</div>
+
+<script>
+const correctAnswers = [
+  'В','Б','В','А','Б','Б','А','В','Б','Б',
+  'Б','Б','Б','Г','В','В','Г','В','А','Г',
+  'ГАГБ','АБВГ','АДВБ','ВБАГ',
+  'ВАГБ','АВГБ','БГАВ',
+  '135','236','256'
+];
+
+const questions = [
+  "1. В результаті яких археологічних розкопок було знайдено пам’ятку, зображену на монеті?",
+  "2. Який князь відіграв провідну роль в організації походів, напрямки яких позначено на карті?",
+  "3. Пріоритет у зовнішній політиці князя Данила Галицького у 1240–1260-х рр. полягав у...",
+  "4. Оберіть портрет господаря замку, зображеного на фото:",
+  "5. Що спонукало гетьмана Петра Дорошенка до укладання договору з османами?",
+  "6. Яким був наслідок для Гетьманщини після Північної війни?",
+  "7. Хто зображений на пам’ятній монеті?",
+  "8. Погляди якої організації в уривку: «...наша південна Русь повинна становити окрему державну цілість...»",
+  "9. Хто є автором листа до Бодянського про естампи й історію?",
+  "10. У яких регіонах України на поч. ХХ ст. була найбільш поширена трудова міграція?",
+  "11. Правильна біографія для банера про Євгена Чикаленка?",
+  "12. Укажіть рік, до якого належить карикатура:",
+  "13. До якого періоду належить ця позиція Винниченка та Петлюри?",
+  "14. Результат політики в культурі СРСР у кінці 1930-х рр.?",
+  "15. Що засвідчували демонстранти в місті Хуст?",
+  "16. Який з плакатів стосується Другої світової війни?",
+  "17. До якого виду мистецтва належить творчість Яблонської, Білокур і Примаченко?",
+  "18. Що призвело до русифікації у 1970-х рр.?",
+  "19. Яке фото стосується Акта проголошення незалежності України?",
+  "20. Яка була реакція українського суспільства після зображеного вектора?",
+  "21. Установіть відповідність між уривком і назвою джерела.",
+  "22. Встановіть відповідність між явищем і визначенням.",
+  "23. Встановіть відповідність між діячами і фактами біографії.",
+  "24. Встановіть відповідність між явищем і періодом.",
+  "25. Встановіть послідовність козацьких державних утворень.",
+  "26. Послідовність появи карикатур.",
+  "27. Послідовність виходу друком книг.",
+  "28. Укажіть діячів українського професійного театру (3 варіанти).",
+  "29. Які документи належать до періоду НЕПу (3 варіанти).",
+  "30. Які судження щодо плаката створеного в роки незалежності є правильними? (3 варіанти)"
+];
+
+function goToStep2() {
+  const name = document.getElementById("name").value.trim();
+  if (name) {
+    document.getElementById("step1").classList.remove("visible");
+    document.getElementById("step2").classList.add("visible");
+  }
+}
+
+function checkCode() {
+  const code = document.getElementById("code").value.trim();
+  if (code === "856") {
+    document.getElementById("step2").classList.remove("visible");
+    document.getElementById("test").classList.add("visible");
+    renderQuestions();
+  } else {
+    document.getElementById("codeError").textContent = "Невірний код доступу!";
+  }
+}
+
+function renderQuestions() {
+  const container = document.getElementById("questionsContainer");
+  questions.forEach((text, idx) => {
+    const div = document.createElement("div");
+    div.classList.add("question");
+    div.innerHTML = `<label>${text}</label><br>
+      <input type="text" name="q${idx+1}" placeholder="Ваш варіант">`;
+    container.appendChild(div);
+  });
+}
+
+function submitTest() {
+  const form = document.getElementById("quizForm");
+  let correct = 0;
+  for (let i = 0; i < correctAnswers.length; i++) {
+    const userAnswer = form[`q${i+1}`].value.toUpperCase().replace(/\s/g, '');
+    if (userAnswer === correctAnswers[i]) {
+      correct++;
+    }
+  }
+  document.getElementById("result").textContent = `Ваш результат: ${correct} правильних із ${correctAnswers.length}`;
+}
+</script>
+
+</body>
+</html>
