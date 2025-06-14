@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Тест з математики – 7 клас</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      padding: 40px;
+    }
+    .container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 30px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    .hidden {
+      display: none;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input[type="text"], input[type="number"] {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 5px;
+      width: 100%;
+      max-width: 250px;
+    }
+    .result {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="accessScreen">
+    <h2>Введіть код доступу</h2>
+    <input type="text" id="accessCode" placeholder="Код доступу" />
+    <button onclick="checkAccess()">Розпочати роботу над тестуванням</button>
+  </div>
+
+  <div class="container hidden" id="testScreen">
+    <h2>Тест з математики для 7 класу</h2>
+    <form id="testForm">
+
+      <!-- Частина І (тести) -->
+      <div class="question">
+        <p>1. Обчисліть: -3 + 5 - (-2) =</p>
+        <label><input type="radio" name="q1" value="0" /> A) 0</label><br />
+        <label><input type="radio" name="q1" value="4" /> B) 4</label><br />
+        <label><input type="radio" name="q1" value="10" /> C) 10</label><br />
+        <label><input type="radio" name="q1" value="-6" /> D) -6</label>
+      </div>
+
+      <div class="question">
+        <p>2. Яке з чисел є розв’язком рівняння: 2x - 4 = 10?</p>
+        <label><input type="radio" name="q2" value="7" /> A) 7</label><br />
+        <label><input type="radio" name="q2" value="6" /> B) 6</label><br />
+        <label><input type="radio" name="q2" value="8" /> C) 8</label><br />
+        <label><input type="radio" name="q2" value="5" /> D) 5</label>
+      </div>
+
+      <div class="question">
+        <p>3. Відстань між містами 360 км. Машина їде 60 км/год. Скільки годин потрібно?</p>
+        <label><input type="radio" name="q3" value="4" /> A) 4</label><br />
+        <label><input type="radio" name="q3" value="5" /> B) 5</label><br />
+        <label><input type="radio" name="q3" value="6" /> C) 6</label><br />
+        <label><input type="radio" name="q3" value="7" /> D) 7</label>
+      </div>
+
+      <div class="question">
+        <p>4. Виразіть у відсотках: 0,35</p>
+        <label><input type="radio" name="q4" value="3.5" /> A) 3,5%</label><br />
+        <label><input type="radio" name="q4" value="35" /> B) 35%</label><br />
+        <label><input type="radio" name="q4" value="0.035" /> C) 0,035%</label><br />
+        <label><input type="radio" name="q4" value="350" /> D) 350%</label>
+      </div>
+
+      <div class="question">
+        <p>5. Обчисліть: (3/4) * (8/9)</p>
+        <label><input type="radio" name="q5" value="2/3" /> A) 2/3</label><br />
+        <label><input type="radio" name="q5" value="1/2" /> B) 1/2</label><br />
+        <label><input type="radio" name="q5" value="3/8" /> C) 3/8</label><br />
+        <label><input type="radio" name="q5" value="24/36" /> D) 24/36</label>
+      </div>
+
+      <!-- Частина ІІ (відкриті відповіді) -->
+      <div class="question">
+        <p>6. Один робітник виконує завдання за 6 год, інший — за 4 год. За скільки годин разом?</p>
+        <input type="text" name="q6" />
+      </div>
+
+      <div class="question">
+        <p>7. Знайди значення виразу: (2a + 3b), якщо a = -2, b = 5</p>
+        <input type="text" name="q7" />
+      </div>
+
+      <div class="question">
+        <p>8. Обчисліть: 5 * (2 - 3) + 7</p>
+        <input type="text" name="q8" />
+      </div>
+
+      <div class="question">
+        <p>9. Знайди площу прямокутника зі сторонами 4,2 см і 1,6 см</p>
+        <input type="text" name="q9" />
+      </div>
+
+      <div class="question">
+        <p>10. Знайди значення виразу: (3² – 5) * 2 + 1</p>
+        <input type="text" name="q10" />
+      </div>
+
+      <button type="button" onclick="confirmEnd()">Завершити роботу над тестом</button>
+    </form>
+  </div>
+
+  <div class="container hidden" id="resultScreen">
+    <h2>Результат тестування</h2>
+    <p class="result" id="score"></p>
+  </div>
+
+  <script>
+    function checkAccess() {
+      const code = document.getElementById("accessCode").value;
+      if (code === "55") {
+        document.getElementById("accessScreen").classList.add("hidden");
+        document.getElementById("testScreen").classList.remove("hidden");
+      } else {
+        alert("Невірний код доступу!");
+      }
+    }
+
+    function confirmEnd() {
+      if (confirm("Чи точно ви хочете закінчити роботу над тестом?")) {
+        submitTest();
+      }
+    }
+
+    function submitTest() {
+      const correctAnswers = {
+        q1: "4",
+        q2: "7",
+        q3: "6",
+        q4: "35",
+        q5: "2/3",
+        q6: "2.4",
+        q7: "11",
+        q8: "2",
+        q9: "6.72",
+        q10: "9"
+      };
+
+      let score = 0;
+      const form = document.getElementById("testForm");
+
+      for (let key in correctAnswers) {
+        let userAnswer = form.elements[key].value.trim().replace(',', '.');
+        if (userAnswer.toLowerCase() === correctAnswers[key].toLowerCase()) {
+          score++;
+        }
+      }
+
+      document.getElementById("testScreen").classList.add("hidden");
+      document.getElementById("resultScreen").classList.remove("hidden");
+      document.getElementById("score").innerText = `Ваш результат: ${score} з 10`;
+    }
+  </script>
+</body>
+</html>
