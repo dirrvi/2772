@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест з англійської мови</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    .hidden { display: none; }
+    button { margin: 10px 0; padding: 10px; }
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px; }
+  </style>
+</head>
+<body>
+  <div id="page1">
+    <h1>Тест з англійської мови</h1>
+    <button onclick="showIntro()">Ознайомитись з платформою</button>
+    <div id="intro" class="hidden">
+      <p><strong>Правила користування платформою тестування:</strong></p>
+      <ol>
+        <li><strong>Ознайомлення з платформою:</strong> Перед початком тесту натисніть кнопку <em>«З правилами ознайомився/лась»</em>. Без цього ви не зможете перейти до наступного етапу.</li>
+        <li><strong>Доступ до тесту:</strong> Введіть код доступу у відповідне поле. Якщо код правильний — ви зможете розпочати роботу над тестом.</li>
+        <li><strong>Проходження тесту:</strong> На кожне запитання потрібно дати письмову відповідь або обрати варіант. Всі поля мають бути заповнені.</li>
+        <li><strong>Завершення тесту:</strong> Після завершення натисніть <em>«Завершити роботу над тестуванням»</em>. З'явиться підтвердження — натисніть «Так», щоб побачити результат.</li>
+        <li><strong>Перегляд результатів:</strong> Ви побачите таблицю з кількістю відповідей та оцінкою за 12-бальною шкалою. Також можна натиснути кнопку <em>«Подивитися правильні відповіді»</em>, щоб порівняти свої відповіді з правильними.</li>
+        <li><strong>Збереження результату:</strong> Зробіть скріншот або сфотографуйте таблицю результатів для подальшої перевірки.</li>
+      </ol>
+      <button onclick="acceptRules()">З правилами ознайомився/лась</button>
+    </div>
+  </div>
+
+  <div id="page2" class="hidden">
+    <h2>Введіть код доступу</h2>
+    <input type="text" id="accessCode" placeholder="Код доступу">
+    <button onclick="checkCode()">Розпочати роботу над тестом</button>
+  </div>
+
+  <div id="page3" class="hidden">
+    <button onclick="startTest()">Перейти до тесту</button>
+  </div>
+
+  <div id="testPage" class="hidden">
+    <form id="testForm">
+      <h3>Відповідайте на питання</h3>
+      <div id="questions"></div>
+      <button type="button" onclick="confirmFinish()">Завершити роботу над тестуванням</button>
+    </form>
+  </div>
+
+  <div id="confirmFinishModal" class="hidden">
+    <p>Ви точно хочете завершити роботу над тестуванням?</p>
+    <button onclick="showResults()">Так</button>
+  </div>
+
+  <div id="results" class="hidden">
+    <h3>Результати</h3>
+    <table>
+      <tr><th>Предмет</th><th>Кількість відповідей</th><th>Оцінка (12-бальна)</th></tr>
+      <tr><td>Англійська мова</td><td id="answered"></td><td id="score"></td></tr>
+    </table>
+    <button onclick="showCorrectAnswers()">Подивитися правильні відповіді</button>
+    <div id="correctAnswers" class="hidden"></div>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "What is the capital of the UK?", a: "London", type: "choice", options: ["London", "Paris", "Berlin"] },
+      { q: "Choose the correct translation for 'випадково'", a: "accidentally", type: "choice", options: ["carefully", "accidentally", "clearly"] },
+      { q: "Complete: She ___ a teacher.", a: "is", type: "choice", options: ["is", "are", "am"] },
+      { q: "Past tense of 'go'?", a: "went", type: "choice", options: ["go", "goed", "went"] },
+      { q: "Translate: 'узбережжя'", a: "coast", type: "choice", options: ["forest", "coast", "mountain"] },
+      { q: "Choose correct: he go/he goes?", a: "he goes", type: "choice", options: ["he go", "he goes", "he going"] },
+      { q: "Translate the word 'високий' when talking about a building", a: "tall", type: "text" },
+      { q: "Choose correct: I am/I is", a: "I am", type: "text" },
+      { q: "Translate: 'вікно'", a: "window", type: "text" },
+      { q: "Translate: 'стілець'", a: "chair", type: "text" },
+      { q: "Translate: 'підлога'", a: "floor", type: "text" },
+      { q: "How many letters in 'English'?", a: "7", type: "text" }
+    ];
+
+    function showIntro() {
+      document.getElementById('intro').classList.remove('hidden');
+    }
+
+    function acceptRules() {
+      document.getElementById('page1').classList.add('hidden');
+      document.getElementById('page2').classList.remove('hidden');
+    }
+
+    function checkCode() {
+      const code = document.getElementById('accessCode').value;
+      if (code === "65") {
+        document.getElementById('page2').classList.add('hidden');
+        document.getElementById('page3').classList.remove('hidden');
+      } else {
+        alert("Невірний код доступу");
+      }
+    }
+
+    function startTest() {
+      document.getElementById('page3').classList.add('hidden');
+      document.getElementById('testPage').classList.remove('hidden');
+      const container = document.getElementById('questions');
+      questions.forEach((q, i) => {
+        if (q.type === "choice") {
+          container.innerHTML += `<p>${i+1}. ${q.q}</p>`;
+          q.options.forEach(opt => {
+            container.innerHTML += `<label><input type='radio' name='q${i}' value='${opt}'> ${opt}</label><br>`;
+          });
+        } else {
+          container.innerHTML += `<p>${i+1}. ${q.q}</p><input type='text' name='q${i}'><br>`;
+        }
+      });
+    }
+
+    function confirmFinish() {
+      document.getElementById('confirmFinishModal').classList.remove('hidden');
+    }
+
+    function showResults() {
+      document.getElementById('confirmFinishModal').classList.add('hidden');
+      document.getElementById('testPage').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+
+      const formData = new FormData(document.getElementById('testForm'));
+      let correct = 0;
+      questions.forEach((q, i) => {
+        const answer = formData.get(`q${i}`)?.trim().toLowerCase();
+        if (answer === q.a.toLowerCase()) correct++;
+      });
+
+      document.getElementById('answered').textContent = questions.length;
+      document.getElementById('score').textContent = Math.round((correct / questions.length) * 12);
+    }
+
+    function showCorrectAnswers() {
+      const container = document.getElementById('correctAnswers');
+      container.innerHTML = '<h4>Правильні відповіді:</h4>';
+      questions.forEach((q, i) => {
+        container.innerHTML += `<p>${i+1}. ${q.q} <strong>${q.a}</strong></p>`;
+      });
+      container.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
