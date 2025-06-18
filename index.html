@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Тестування</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+  .hidden { display: none; }
+  .page { padding: 20px; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  .tabs { display: flex; margin-bottom: 10px; }
+  .tab { margin-right: 10px; padding: 10px; background: #ddd; cursor: pointer; user-select:none; }
+  .tab.active { background: #bbb; }
+  .tab-content { background: white; padding: 10px; border: 1px solid #ccc; }
+  .question { margin-bottom: 15px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  table th, table td { border: 1px solid #ccc; padding: 8px; text-align: center; background-color: #fff; }
+  .col3-green { background-color: #c9f7c2; }
+  .answer-correct { color: green; font-weight: bold; }
+  .answer-wrong { color: red; font-weight: bold; }
+  #answers-overlay {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center; align-items: center;
+    z-index: 1000;
+  }
+  #answers-content {
+    background: white; padding: 20px; max-height: 80vh; overflow-y: auto; width: 90%; max-width: 800px; border-radius: 8px;
+  }
+  #answers-content h2 { margin-top: 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="answers-overlay">
+  <div id="answers-content">
+    <h2>Ваші відповіді</h2>
+    <div id="answers-list"></div>
+    <button id="close-answers-btn">Закрити</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  // Запитання для тесту (з оновленими питаннями, як просили)
+  const questions = {
+    "Українська мова": [
+      { question: "Яка частина мови вказує на ознаку предмета?", options: ["Іменник", "Прикметник", "Дієслово", "Прислівник"], correct: 1 },
+      { question: "Визначте правильний наголос у слові 'молоко'.", options: ["мОлоко", "молОко", "молокО", "молоко"], correct: 2 },
+      { question: "Яке слово є синонімом до слова 'швидкий'?", options: ["Повільний", "Стрімкий", "Тихий", "Великий"], correct: 1 },
+      { question: "Яка частина мови називає предмет?", options: ["Дієслово", "Іменник", "Прикметник", "Прислівник"], correct: 1 },
+      { question: "Визначте правильне речення.", options: ["Я йду в школу.", "Я йду до школи.", "Я йду на школу.", "Я йду по школу."], correct: 1 },
+      { question: "Яка буква пропущена в слові: 'в_лик'?", options: ["і", "е", "и", "о"], correct: 0 },
+      { question: "Обери слово з м’яким знаком на кінці.", options: ["Місто", "День", "Кінь", "Річка"], correct: 2 },
+      { question: "В якому слові правильно вжито апостроф?", options: ["Об'єкт", "Обект", "Обьект", "Обек'т"], correct: 0 },
+      { question: "Який це вид речення: 'Сьогодні гарна погода'?", options: ["Питальне", "Означальне", "Розповідне", "Спонукальне"], correct: 2 },
+      { question: "Що таке антонім?", options: ["Синонім", "Протилежне за значенням слово", "Однокореневе слово", "Прислівник"], correct: 1 },
+      { question: "Яке слово є дієсловом?", options: ["Писати", "Красивий", "Книга", "Вчитель"], correct: 0 },
+      { question: "Оберіть правильно написане слово.", options: ["Здрастуйте", "Здраствуйтє", "Здрастутє", "Здрастуй"], correct: 0 }
+    ],
+    "Математика": [
+      { question: "Скільки буде 5 + 7?", options: ["11", "12", "13", "14"], correct: 1 },
+      { question: "Що таке добуток чисел 3 і 4?", options: ["7", "12", "14", "24"], correct: 1 },
+      { question: "Яке число є парним?", options: ["3", "7", "10", "15"], correct: 2 },
+      { question: "Обчисліть: 15 - 6", options: ["7", "8", "9", "10"], correct: 2 },
+      { question: "Скільки буде 7 + 8?", options: ["14", "15", "16", "17"], correct: 1 },
+      { question: "Обчисліть: 9 × 2", options: ["17", "18", "19", "20"], correct: 1 },
+      { question: "Який результат ділення 20 на 5?", options: ["2", "3", "4", "5"], correct: 2 },
+      { question: "Обчисліть: 6 + 9", options: ["13", "14", "15", "16"], correct: 2 },
+      { question: "Що таке сумою чисел 4 і 6?", options: ["10", "9", "11", "12"], correct: 0 },
+      { question: "Обчисліть: 18 - 7", options: ["9", "10", "11", "12"], correct: 2 },
+      { question: "Яке число є непарним?", options: ["2", "4", "7", "8"], correct: 2 },
+      { question: "Обчисліть: 3 × 5", options: ["15", "10", "20", "25"], correct: 0 }
+    ],
+    "Історія України": [
+      { question: "Хто був першим гетьманом Війська Запорозького?", options: ["Богдан Хмельницький", "Іван Мазепа", "Петро Сагайдачний", "Данило Галицький"], correct: 2 },
+      { question: "Коли було прийнято Конституцію Пилипа Орлика?", options: ["1710", "1720", "1730", "1740"], correct: 0 },
+      { question: "Яка подія сталася у 1991 році?", options: ["Проголошення незалежності України", "Помаранчева революція", "Революція Гідності", "Об'єднання України"], correct: 0 },
+      { question: "Хто очолював боротьбу за незалежність України у XVIII столітті?", options: ["Петро Калнишевський", "Іван Мазепа", "Тарас Шевченко", "Михайло Грушевський"], correct: 0 },
+      { question: "Який князь заснував Київ?", options: ["Кий", "Щек", "Хорив", "Володимир"], correct: 0 },
+      { question: "Яка битва була вирішальною у визвольній війні під проводом Богдана Хмельницького?", options: ["Битва під Берестечком", "Битва під Конотопом", "Битва під Жовтими Водами", "Битва під Полтавою"], correct: 2 },
+      { question: "Коли була заснована Українська Народна Республіка?", options: ["1917", "1918", "1919", "1920"], correct: 0 },
+      { question: "Хто є автором історії України?", options: ["Михайло Грушевський", "Іван Франко", "Пантелеймон Куліш", "Олександр Довженко"], correct: 0 },
+      { question: "Що означає термін 'Русь'?", options: ["Держава Київської Русі", "Місто", "Річка", "Залізо"], correct: 0 },
+      { question: "Коли відбулась Помаранчева революція?", options: ["2004", "2010", "1991", "2014"], correct: 0 },
+      { question: "Хто очолював УПА?", options: ["Роман Шухевич", "Степан Бандера", "Василь Стус", "Іван Франко"], correct: 0 },
+      { question: "Коли Україна отримала Томос про автокефалію?", options: ["2018", "2016", "2019", "2020"], correct: 0 }
+    ],
+    "Англійська мова": [
+      { question: "How do you say 'cat' in Ukrainian?", options: ["Кіт", "Пес", "Кінь", "Корова"], correct: 0 },
+      { question: "What is the past tense of 'go'?", options: ["Went", "Goed", "Go", "Gone"], correct: 0 },
+      { question: "Choose the correct article: ___ apple.", options: ["An", "A", "The", "No article"], correct: 0 },
+      { question: "What is 'яблуко' in English?", options: ["Apple", "Orange", "Banana", "Grape"], correct: 0 },
+      { question: "Select the plural form of 'mouse'.", options: ["Mouses", "Mices", "Mice", "Mouse"], correct: 2 },
+      { question: "How do you greet someone in the morning?", options: ["Good morning", "Good night", "Hello", "Goodbye"], correct: 0 },
+      { question: "What color is the sky?", options: ["Blue", "Green", "Red", "Yellow"], correct: 0 },
+      { question: "Which word is a noun?", options: ["Run", "Beautiful", "Cat", "Quick"], correct: 2 },
+      { question: "Complete: She ___ to school every day.", options: ["go", "goes", "going", "gone"], correct: 1 },
+      { question: "What is the opposite of 'hot'?", options: ["Cold", "Warm", "Cool", "Heat"], correct: 0 },
+      { question: "How do you say 'дякую' in English?", options: ["Thank you", "Please", "Sorry", "Hello"], correct: 0 },
+      { question: "Choose the correct sentence.", options: ["He is tall.", "He tall is.", "Tall he is.", "He is the tall."], correct: 0 }
+    ]
+  };
+
+  const state = {
+    page: "rules",
+    block: 1,
+    subjectIndex: 0,
+    answers: {
+      "Українська мова": Array(12).fill(null),
+      "Математика": Array(12).fill(null),
+      "Історія України": Array(12).fill(null),
+      "Англійська мова": Array(12).fill(null)
+    }
+  };
+
+  const blocks = {
+    1: ["Українська мова", "Математика"],
+    2: ["Історія України", "Англійська мова"]
+  };
+
+  const app = document.getElementById("app");
+  const answersOverlay = document.getElementById("answers-overlay");
+  const answersList = document.getElementById("answers-list");
+  const closeAnswersBtn = document.getElementById("close-answers-btn");
+
+  function renderRules() {
+    app.innerHTML = `
+      <div class="page">
+        <h1>Правила тестування</h1>
+        <p>Вас чекає 2 блоки тестів. Кожен блок складається з 2 предметів по 12 питань у кожному.</p>
+        <p>Відповідайте на питання, обираючи одну правильну відповідь.</p>
+        <button id="start-btn">Почати тест</button>
+      </div>
+    `;
+    document.getElementById("start-btn").onclick = () => {
+      state.page = "test";
+      state.block = 1;
+      state.subjectIndex = 0;
+      renderTest();
+    };
+  }
+
+  function renderTest() {
+    const subject = blocks[state.block][state.subjectIndex];
+    const qs = questions[subject];
+    app.innerHTML = `
+      <div class="page">
+        <h2>Блок ${state.block} — Предмет: ${subject}</h2>
+        <div class="tabs">
+          ${blocks[state.block].map((subj, i) => `<div class="tab ${i === state.subjectIndex ? "active" : ""}" data-index="${i}">${subj}</div>`).join("")}
+        </div>
+        <div class="tab-content">
+          ${qs.map((q, i) => `
+            <div class="question">
+              <p><strong>Питання ${i + 1}:</strong> ${q.question}</p>
+              ${q.options.map((opt, idx) => `
+                <label>
+                  <input type="radio" name="q${i}" value="${idx}" ${state.answers[subject][i] === idx ? "checked" : ""} />
+                  ${opt}
+                </label><br/>
+              `).join("")}
+            </div>
+          `).join("")}
+        </div>
+        <button id="prev-subject-btn" ${state.subjectIndex === 0 ? "disabled" : ""}>Попередній предмет</button>
+        <button id="next-subject-btn">${state.subjectIndex === blocks[state.block].length - 1 ? "Перейти до наступного блоку" : "Наступний предмет"}</button>
+      </div>
+    `;
+
+    // Вкладки переключення предметів
+    [...document.querySelectorAll(".tab")].forEach(tab => {
+      tab.onclick = () => {
+        saveAnswers();
+        state.subjectIndex = +tab.dataset.index;
+        renderTest();
+      };
+    });
+
+    document.getElementById("prev-subject-btn").onclick = () => {
+      saveAnswers();
+      if(state.subjectIndex > 0) {
+        state.subjectIndex--;
+        renderTest();
+      }
+    };
+    document.getElementById("next-subject-btn").onclick = () => {
+      saveAnswers();
+      if(state.subjectIndex < blocks[state.block].length - 1) {
+        state.subjectIndex++;
+        renderTest();
+      } else {
+        if(state.block < 2) {
+          state.block++;
+          state.subjectIndex = 0;
+          renderTest();
+        } else {
+          state.page = "results";
+          renderResults();
+        }
+      }
+    };
+  }
+
+  function saveAnswers() {
+    const subject = blocks[state.block][state.subjectIndex];
+    const qs = questions[subject];
+    for(let i = 0; i < qs.length; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      state.answers[subject][i] = selected ? +selected.value : null;
+    }
+  }
+
+  function renderResults() {
+    app.innerHTML = `
+      <div class="page">
+        <h1>Результати тестування</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Предмет</th>
+              <th>Правильних відповідей</th>
+              <th>Загальна кількість</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.keys(state.answers).map(subject => {
+              const userAnswers = state.answers[subject];
+              const correctAnswers = questions[subject].map(q => q.correct);
+              const correctCount = userAnswers.reduce((acc, ans, idx) => acc + (ans === correctAnswers[idx] ? 1 : 0), 0);
+              return `<tr><td>${subject}</td><td>${correctCount}</td><td>${userAnswers.length}</td></tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+        <button id="show-answers-btn">Переглянути всі відповіді</button>
+      </div>
+    `;
+
+    document.getElementById("show-answers-btn").onclick = () => {
+      showAnswers();
+    };
+  }
+
+  function showAnswers() {
+    answersList.innerHTML = ""; // Очистити перед показом
+    for(const subject in state.answers) {
+      const userAnswers = state.answers[subject];
+      const qs = questions[subject];
+      const correctAnswers = qs.map(q => q.correct);
+
+      let html = `<h3>${subject}</h3><table><thead><tr><th>Питання</th><th>Ваша відповідь</th><th>Правильна відповідь</th></tr></thead><tbody>`;
+      for(let i = 0; i < qs.length; i++) {
+        const userAns = userAnswers[i];
+        const correctAns = correctAnswers[i];
+        html += `<tr>
+          <td>${qs[i].question}</td>
+          <td class="${userAns === correctAns ? 'answer-correct' : 'answer-wrong'}">${userAns !== null ? qs[i].options[userAns] : "Відповідь не обрана"}</td>
+          <td>${qs[i].options[correctAns]}</td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      answersList.insertAdjacentHTML('beforeend', html);
+    }
+    answersOverlay.style.display = "flex";
+  }
+
+  closeAnswersBtn.onclick = () => {
+    answersOverlay.style.display = "none";
+  };
+
+  // Початок роботи
+  renderRules();
+
+})();
+</script>
+</body>
+</html>
