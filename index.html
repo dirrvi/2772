@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Тестування</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f4f4f4;
+      color: #000;
+    }
+    .page {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 10px;
+      user-select: none;
+    }
+    .tab {
+      padding: 10px 15px;
+      background: #ddd;
+      margin-right: 10px;
+      cursor: pointer;
+      border-radius: 3px 3px 0 0;
+    }
+    .tab.active {
+      background: #bbb;
+      font-weight: bold;
+    }
+    .tab-content {
+      border: 1px solid #bbb;
+      padding: 15px;
+      border-radius: 0 3px 3px 3px;
+      background: #fff;
+    }
+    .question {
+      margin-bottom: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      background: #fff;
+    }
+    .col3-green {
+      background-color: #c9f7c2 !important;
+    }
+    .answer-correct {
+      color: green;
+      font-weight: bold;
+    }
+    .answer-wrong {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app" class="page"></div>
+
+<script>
+(() => {
+  // Дані з 12 питаннями на предмет
+  const questions = {
+    "Українська мова": [
+      { question: "Обери правильне твердження про українську мову.", options: ["Це слов'янська мова", "Це романська мова", "Це германська мова", "Це мова з Африки"], correct: 0 },
+      { question: "Яке слово є іменником?", options: ["Бігати", "Красивий", "Дім", "Швидко"], correct: 2 },
+      { question: "Обери слово з наголосом на другому складі.", options: ["Мо́локо", "Город", "Дерево", "Книга"], correct: 0 },
+      { question: "Вибери правильно написане слово.", options: ["Пишемо", "Пишемо", "Пишемо", "Пишемо"], correct: 0 },
+      { question: "Доберіть значення іншомовного слова 'комп'ютер'.", options: ["Обчислювальна машина", "Телефон", "Письмовий прилад", "Музичний інструмент"], correct: 0 },
+      { question: "Який розділ мови вивчає слова?", options: ["Лексикологія", "Морфологія", "Синтаксис", "Фонетика"], correct: 0 },
+      { question: "Що означає слово 'письменник'?", options: ["Той, хто пише", "Той, хто читає", "Той, хто малює", "Той, хто співає"], correct: 0 },
+      { question: "Обери прикметник серед слів.", options: ["Великий", "Ходити", "Птах", "Море"], correct: 0 },
+      { question: "Що таке синонім?", options: ["Слова однакового значення", "Слова з протилежним значенням", "Прислівники", "Сполучники"], correct: 0 },
+      { question: "В якому реченні є звертання?", options: ["Привіт, друже!", "Я йду до школи.", "Падає дощ.", "Сонце світить."], correct: 0 },
+      { question: "Обери правильний варіант закінчення.", options: ["Я люблю читати", "Я любити читати", "Я люблю читання", "Я любиш читати"], correct: 0 },
+      { question: "Що означає слово 'рідний'?", options: ["Близький", "Далекий", "Незнайомий", "Чужий"], correct: 0 }
+    ],
+    "Математика": [
+      { question: "Скільки буде 7 + 8?", options: ["15", "16", "17", "14"], correct: 0 },
+      { question: "Яке число є парним?", options: ["3", "7", "10", "5"], correct: 2 },
+      { question: "Що таке периметр квадрата зі стороною 4?", options: ["16", "8", "12", "4"], correct: 0 },
+      { question: "Яке число менше за 5?", options: ["6", "7", "3", "8"], correct: 2 },
+      { question: "Обчисліть: 9 - 4 = ?", options: ["5", "6", "4", "3"], correct: 0 },
+      { question: "Який результат множення 3 * 3?", options: ["6", "9", "12", "8"], correct: 1 },
+      { question: "Що таке добуток?", options: ["Результат множення", "Результат ділення", "Результат додавання", "Результат віднімання"], correct: 0 },
+      { question: "Яке число є простим?", options: ["4", "9", "7", "6"], correct: 2 },
+      { question: "Обчисліть 12 / 3.", options: ["3", "4", "6", "5"], correct: 1 },
+      { question: "Що таке кут прямий?", options: ["90 градусів", "45 градусів", "180 градусів", "60 градусів"], correct: 0 },
+      { question: "Що більше: 1/2 чи 1/3?", options: ["1/3", "1/2", "Вони рівні", "Немає правильного"], correct: 1 },
+      { question: "Скільки буде 5 + 7 - 4?", options: ["8", "6", "7", "5"], correct: 0 }
+    ],
+    "Історія України": [
+      { question: "Коли почалась Київська Русь?", options: ["IX ст.", "XII ст.", "XV ст.", "XVII ст."], correct: 0 },
+      { question: "Хто був першим президентом України?", options: ["Кравчук", "Ющенко", "Янукович", "Порошенко"], correct: 0 },
+      { question: "Яка подія відбулась у 1991 році?", options: ["Незалежність України", "Друга світова війна", "Революція Гідності", "Перший космонавт"], correct: 0 },
+      { question: "Столиця України?", options: ["Київ", "Львів", "Харків", "Одеса"], correct: 0 },
+      { question: "Що таке Майдан?", options: ["Площа для зборів", "Вид спорту", "Свято", "Річка"], correct: 0 },
+      { question: "Хто очолював Україну у 2014 році?", options: ["Порошенко", "Кучма", "Кравчук", "Ющенко"], correct: 0 },
+      { question: "Коли почалась Друга світова війна?", options: ["1939", "1945", "1914", "1920"], correct: 0 },
+      { question: "Який гетьман очолював Військо Запорозьке?", options: ["Богдан Хмельницький", "Іван Мазепа", "Пилип Орлик", "Сагайдачний"], correct: 0 },
+      { question: "Що таке Голодомор?", options: ["Геноцид українського народу", "Свято урожаю", "Військова операція", "Історичний музей"], correct: 0 },
+      { question: "Коли відбулась Революція Гідності?", options: ["2013-2014", "1991", "2004", "1989"], correct: 0 },
+      { question: "Хто заснував Київ?", options: ["Кий", "Щек", "Хорив", "Либідь"], correct: 0 },
+      { question: "Що таке Конституція України?", options: ["Основний закон держави", "Історична книга", "Свято", "Пам’ятник"], correct: 0 }
+    ],
+    "Англійська мова": [
+      { question: "What is the English word for 'собака'?", options: ["Dog", "Cat", "Bird", "Fish"], correct: 0 },
+      { question: "How do you say 'Привіт' in English?", options: ["Hello", "Goodbye", "Thanks", "Please"], correct: 0 },
+      { question: "What is the plural of 'child'?", options: ["Childs", "Children", "Childes", "Child"], correct: 1 },
+      { question: "Choose the correct verb: She ___ to school.", options: ["go", "goes", "going", "gone"], correct: 1 },
+      { question: "What does the word 'library' mean?", options: ["Бібліотека", "Книжковий магазин", "Кафе", "Школа"], correct: 0 },
+      { question: "How do you say 'дякую' in English?", options: ["Thank you", "Please", "Sorry", "Hello"], correct: 0 },
+      { question: "What is the past tense of 'run'?", options: ["Run", "Ran", "Running", "Runned"], correct: 1 },
+      { question: "Choose the correct article: ___ apple.", options: ["A", "An", "The", "No article"], correct: 1 },
+      { question: "What color is the sky?", options: ["Blue", "Green", "Red", "Yellow"], correct: 0 },
+      { question: "What is the opposite of 'big'?", options: ["Small", "Tall", "Short", "Long"], correct: 0 },
+      { question: "Choose the correct pronoun: ___ am happy.", options: ["I", "You", "He", "She"], correct: 0 },
+      { question: "How do you say 'книга' in English?", options: ["Book", "Pen", "Table", "Chair"], correct: 0 }
+    ],
+  };
+
+  // --- Стан ---
+  let state = {
+    page: "rules",
+    block: 1,
+    subjectIndex: 0,
+    answers: {
+      "Українська мова": Array(12).fill(null),
+      "Математика": Array(12).fill(null),
+      "Історія України": Array(12).fill(null),
+      "Англійська мова": Array(12).fill(null),
+    },
+  };
+
+  const app = document.getElementById("app");
+
+  // --- Рендер ---
+  function render() {
+    if(state.page === "rules") {
+      app.innerHTML = `
+        <h1>Правила тестування</h1>
+        <p>Ласкаво просимо! Ось як користуватися платформою:</p>
+        <ul>
+          <li>Уважно читайте кожне питання.</li>
+          <li>Вибирайте одну правильну відповідь із запропонованих.</li>
+          <li>Між предметами у блоці можна переключатися за вкладками.</li>
+          <li>Після завершення блоку ви побачите результати.</li>
+          <li>Для переходу до наступного блоку потрібно ввести код доступу.</li>
+          <li>Після завершення другого блоку ви зможете переглянути свої відповіді.</li>
+        </ul>
+        <button onclick="startAccess()">З правилами ознайомився/лась</button>
+      `;
+    }
+    else if(state.page === "access") {
+      const codeNeeded = state.block === 1 ? "54" : "29";
+      app.innerHTML = `
+        <h2>Введіть код доступу до блоку ${state.block}</h2>
+        <input id="accessCode" type="text" placeholder="Код доступу" autofocus />
+        <button onclick="checkAccess()">Розпочати роботу над тестуванням</button>
+        <p style="margin-top: 10px;">Потрібен код: <b>${codeNeeded}</b></p>
+      `;
+    }
+    else if(state.page === "test") {
+      const subjectsBlock1 = ["Українська мова", "Математика"];
+      const subjectsBlock2 = ["Історія України", "Англійська мова"];
+      const subjects = state.block === 1 ? subjectsBlock1 : subjectsBlock2;
+      const currentSubject = subjects[state.subjectIndex];
+
+      // Вкладки
+      const tabs = subjects.map((s,i) => `<div class="tab ${i === state.subjectIndex ? "active" : ""}" onclick="switchTab(${i})">${s}</div>`).join("");
+
+      // Питання поточного предмету
+      const qs = questions[currentSubject];
+      const qIndex = state.answers[currentSubject].findIndex(ans => ans === null);
+      // Якщо всі відповіді є - показати кнопку завершення
+      let testContent = "";
+      if(qIndex === -1) {
+        testContent = `<p>Ви відповіли на всі питання цього предмету.</p>`;
+      } else {
+        const q = qs[qIndex];
+        testContent = `
+          <div class="question">
+            <p><b>Питання ${qIndex + 1}:</b> ${q.question}</p>
+            ${q.options.map((opt, i) => `
+              <label>
+                <input type="radio" name="q${qIndex}" value="${i}" 
+                  ${state.answers[currentSubject][qIndex] === i ? "checked" : ""}
+                  onchange="saveAnswer('${currentSubject}', ${qIndex}, ${i})" />
+                ${opt}
+              </label><br/>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      app.innerHTML = `
+        <h2>Блок ${state.block} - Тестування</h2>
+        <div class="tabs">${tabs}</div>
+        <div class="tab-content">${testContent}</div>
+        <button onclick="finishBlock()">Завершити тестування</button>
+      `;
+    }
+    else if(state.page === "blockResult") {
+      // Показати таблицю після блоку
+      const subjectsBlock1 = ["Українська мова", "Математика"];
+      const subjectsBlock2 = ["Історія України", "Англійська мова"];
+      const allSubjects = [...subjectsBlock1, ...subjectsBlock2];
+
+      let rows = "";
+      allSubjects.forEach(subj => {
+        const ansCount = state.answers[subj].filter(a => a !== null).length;
+        let col3 = "";
+        if(state.block === 1) {
+          col3 = subjectsBlock2.includes(subj) ? "До виконання не приступив" : "";
+        } else if(state.block === 2) {
+          // Дати оцінку
+          const correctCount = questions[subj].reduce((acc, q, i) => acc + (state.answers[subj][i] === q.correct ? 1 : 0), 0);
+          col3 = `Правильних відповідей: ${correctCount} / 12`;
+        }
+        rows += `<tr>
+          <td>${subj}</td>
+          <td>${ansCount} / 12</td>
+          <td>${col3}</td>
+        </tr>`;
+      });
+
+      app.innerHTML = `
+        <h2>Результати блоку ${state.block}</h2>
+        <table>
+          <thead><tr><th>Предмет</th><th>Відповіді</th><th>Результат</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${state.block === 1 ? `<button onclick="goToAccess2()">Ввести код доступу до блоку 2</button>` : `<button onclick="showAnswers()">Переглянути відповіді</button>`}
+      `;
+    }
+    else if(state.page === "showAnswers") {
+      // Показати відповіді по кожному предмету та питанням
+      let content = `<h2>Відповіді</h2>`;
+      Object.keys(questions).forEach(subj => {
+        content += `<h3>${subj}</h3>`;
+        questions[subj].forEach((q, i) => {
+          const userAns = state.answers[subj][i];
+          const correctAns = q.correct;
+          const userText = userAns === null ? "Відповідь відсутня" : q.options[userAns];
+          const correctText = q.options[correctAns];
+          const className = userAns === correctAns ? "answer-correct" : "answer-wrong";
+          content += `
+            <p><b>Питання ${i+1}:</b> ${q.question}</p>
+            <p>Ваша відповідь: <span class="${className}">${userText}</span></p>
+            ${userAns !== correctAns ? `<p>Правильна відповідь: <b>${correctText}</b></p>` : ""}
+            <hr>
+          `;
+        });
+      });
+      content += `<button onclick="restart()">Почати з початку</button>`;
+      app.innerHTML = content;
+    }
+  }
+
+  // --- Функції ---
+  window.startAccess = () => {
+    state.page = "access";
+    render();
+    setTimeout(() => {
+      const inp = document.getElementById("accessCode");
+      if(inp) inp.focus();
+    }, 10);
+  };
+
+  window.checkAccess = () => {
+    const inp = document.getElementById("accessCode");
+    if(!inp) return;
+    const code = inp.value.trim();
+    const correctCode = state.block === 1 ? "54" : "29";
+    if(code === correctCode) {
+      state.page = "test";
+      render();
+    } else {
+      alert("Невірний код доступу. Спробуйте ще раз.");
+      inp.value = "";
+      inp.focus();
+    }
+  };
+
+  window.switchTab = (i) => {
+    state.subjectIndex = i;
+    render();
+  };
+
+  window.saveAnswer = (subject, qIndex, ansIndex) => {
+    state.answers[subject][qIndex] = ansIndex;
+    render();
+  };
+
+  window.finishBlock = () => {
+    // Перевірити, чи всі питання відповіли
+    const subjectsBlock = state.block === 1 ? ["Українська мова", "Математика"] : ["Історія України", "Англійська мова"];
+    for(let subj of subjectsBlock) {
+      if(state.answers[subj].some(a => a === null)) {
+        if(!confirm(`У предметі "${subj}" залишились неотвечені питання. Ви впевнені, що хочете завершити блок?`)) {
+          return;
+        }
+      }
+    }
+    state.page = "blockResult";
+    render();
+  };
+
+  window.goToAccess2 = () => {
+    state.block = 2;
+    state.subjectIndex = 0;
+    state.page = "access";
+    render();
+    setTimeout(() => {
+      const inp = document.getElementById("accessCode");
+      if(inp) inp.focus();
+    }, 10);
+  };
+
+  window.showAnswers = () => {
+    state.page = "showAnswers";
+    render();
+  };
+
+  window.restart = () => {
+    state.page = "rules";
+    state.block = 1;
+    state.subjectIndex = 0;
+    state.answers = {
+      "Українська мова": Array(12).fill(null),
+      "Математика": Array(12).fill(null),
+      "Історія України": Array(12).fill(null),
+      "Англійська мова": Array(12).fill(null),
+    };
+    render();
+  };
+
+  // Старт
+  render();
+})();
+</script>
+
+</body>
+</html>
