@@ -1,0 +1,183 @@
+// script.js
+
+const app = document.getElementById("app");
+
+let state = {
+  currentPage: "rules",
+  block: 1,
+  subjectIndex: 0,
+  answers: {
+    "Українська мова": [],
+    "Математика": [],
+    "Історія України": [],
+    "Англійська мова": []
+  }
+};
+
+const subjects = {
+  1: ["Українська мова", "Математика"],
+  2: ["Історія України", "Англійська мова"]
+};
+
+const questions = {
+  "Українська мова": Array.from({ length: 12 }, (_, i) => ({
+    question: `Питання ${i + 1} з української мови?`,
+    options: ["Варіант А", "Варіант Б", "Варіант В", "Варіант Г"],
+    correct: 0
+  })),
+  "Математика": Array.from({ length: 12 }, (_, i) => ({
+    question: `Приклад ${i + 1} з математики?`,
+    options: ["1", "2", "3", "4"],
+    correct: 1
+  })),
+  "Історія України": Array.from({ length: 12 }, (_, i) => ({
+    question: `Питання ${i + 1} з історії України?`,
+    options: ["1709", "1918", "1991", "1648"],
+    correct: 2
+  })),
+  "Англійська мова": Array.from({ length: 12 }, (_, i) => ({
+    question: `Question ${i + 1} in English?`,
+    options: ["Option A", "Option B", "Option C", "Option D"],
+    correct: 3
+  }))
+};
+
+function render() {
+  const page = state.currentPage;
+  const block = state.block;
+  const subIndex = state.subjectIndex;
+  const subjectList = subjects[block];
+  const subject = subjectList[subIndex];
+
+  if (page === "rules") {
+    app.innerHTML = `
+      <div class="page">
+        <h2>Правила тестування</h2>
+        <p>Ознайомтесь з інструкціями перед початком.</p>
+        <button onclick="setPage('access1')">З правилами ознайомився/лась</button>
+      </div>
+    `;
+  } else if (page === "access1" || page === "access2") {
+    const blockNum = page === "access1" ? 1 : 2;
+    const code = blockNum === 1 ? "54" : "29";
+    app.innerHTML = `
+      <div class="page">
+        <h2>Введіть код доступу до ${blockNum} блоку</h2>
+        <input id="access-code" placeholder="Введіть код (${code})" />
+        <br />
+        <button onclick="checkCode('${code}', 'start${blockNum}')">Розпочати</button>
+      </div>
+    `;
+  } else if (page.startsWith("start")) {
+    const blk = parseInt(page.replace("start", ""));
+    app.innerHTML = `
+      <div class="page">
+        <button onclick="startBlock(${blk})">Перейти до тесту</button>
+      </div>
+    `;
+  } else if (page === "test") {
+    const tabs = subjectList.map((s, i) => `<div class="tab ${i === subIndex ? 'active' : ''}" onclick="switchSubject(${i})">${s}</div>`).join('');
+    const qs = questions[subject];
+    const userAnswers = state.answers[subject];
+    const questionsHTML = qs.map((q, i) => `
+      <div class="question">
+        <strong>${q.question}</strong><br />
+        ${q.options.map((opt, j) => `
+          <label><input type="radio" name="q${i}" value="${j}" ${userAnswers[i] == j ? 'checked' : ''} onchange="saveAnswer('${subject}', ${i}, ${j})"> ${opt}</label><br>
+        `).join('')}
+      </div>
+    `).join('');
+    app.innerHTML = `
+      <div class="page">
+        <div class="tabs">${tabs}</div>
+        <div class="tab-content">${questionsHTML}</div>
+        <button onclick="finishConfirm()">Завершити тестування</button>
+      </div>
+    `;
+  } else if (page === "summary1") {
+    const rows = [].concat(...Object.values(subjects)).map(subj => {
+      const count = (state.answers[subj] || []).filter(x => x !== undefined).length;
+      const result = subjects[2].includes(subj) ? "До виконання не приступив" : "";
+      return `<tr><td>${subj}</td><td>${count}</td><td>${result}</td></tr>`;
+    }).join('');
+    app.innerHTML = `
+      <div class="page">
+        <h2>Проміжні результати</h2>
+        <table class="results-table">
+          <tr><th>Предмет</th><th>К-сть відповідей</th><th>Результат</th></tr>
+          ${rows}
+        </table>
+        <button onclick="setPage('access2')">Перейти на другий блок</button>
+      </div>
+    `;
+  } else if (page === "summary2") {
+    const rows = [].concat(...Object.values(subjects)).map(subj => {
+      const answ = state.answers[subj] || [];
+      const score = Math.round((answ.filter(a => a !== undefined).length / 12) * 12);
+      return `<tr><td>${subj}</td><td>${answ.length}</td><td class="col3-green">${score} / 12</td></tr>`;
+    }).join('');
+    app.innerHTML = `
+      <div class="page">
+        <h2>Результати</h2>
+        <table class="results-table">
+          <tr><th>Предмет</th><th>К-сть відповідей</th><th>Результат</th></tr>
+          ${rows}
+        </table>
+        <button onclick="setPage('answers')">Переглянути відповіді</button>
+      </div>
+    `;
+  } else if (page === "answers") {
+    const content = Object.keys(questions).map(sub => {
+      const qs = questions[sub];
+      const ua = state.answers[sub] || [];
+      return `
+        <h3>${sub}</h3>
+        ${qs.map((q, i) => `
+          <div>
+            <strong>${q.question}</strong><br>
+            Ваша відповідь: ${q.options[ua[i]] || 'не обрано'}<br>
+            Правильна відповідь: ${q.options[q.correct]}
+          </div>
+          <hr>
+        `).join('')}
+      `;
+    }).join('<hr>');
+    app.innerHTML = `<div class="page">${content}</div>`;
+  }
+}
+
+function setPage(p) {
+  state.currentPage = p;
+  render();
+}
+
+function checkCode(validCode, next) {
+  const entered = document.getElementById("access-code").value;
+  if (entered === validCode) setPage(next);
+  else alert("Невірний код!");
+}
+
+function startBlock(num) {
+  state.block = num;
+  state.subjectIndex = 0;
+  state.currentPage = "test";
+  render();
+}
+
+function switchSubject(i) {
+  state.subjectIndex = i;
+  render();
+}
+
+function saveAnswer(subject, qIndex, optIndex) {
+  state.answers[subject][qIndex] = optIndex;
+}
+
+function finishConfirm() {
+  if (confirm("Ви точно хочете завершити роботу над тестуванням?")) {
+    state.currentPage = state.block === 1 ? "summary1" : "summary2";
+    render();
+  }
+}
+
+render();
