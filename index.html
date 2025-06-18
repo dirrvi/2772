@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Тестування з 4 предметів</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .hidden { display: none; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .tabs { margin-bottom: 10px; }
+  .tabs button { margin-right: 5px; padding: 5px 10px; }
+  .tab-content { border: 1px solid #ccc; padding: 10px; }
+  table { border-collapse: collapse; margin-top: 15px; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  .green-bg { background-color: #c8f7c5; }
+  h2 { margin-top: 0; }
+  .confirm-box {
+    border: 1px solid #888; padding: 15px; background: #eee;
+    max-width: 350px; margin: 15px 0;
+  }
+  .confirm-box button { margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<!-- СТАРТОВА СТОРІНКА З ПРАВИЛАМИ -->
+<div id="page-start">
+  <h1>Правила тестування</h1>
+  <p>Вітаємо! Перед початком тестування ознайомтесь з правилами:</p>
+  <ul>
+    <li>Тест складається з 4 предметів, розділених на 2 блоки.</li>
+    <li>Перший блок: Українська мова та Математика.</li>
+    <li>Другий блок: Історія України та Англійська мова.</li>
+    <li>Відповідайте на питання уважно.</li>
+  </ul>
+  <button id="btn-accept-rules">З правилами ознайомився/лась</button>
+</div>
+
+<!-- КНОПКА ПЕРЕХОДУ ДО ПЕРШОГО БЛОКУ -->
+<div id="page-go-block1" class="hidden" style="margin-top: 20px;">
+  <button id="btn-go-block1">Перейти до першого блоку</button>
+</div>
+
+<!-- ВВІД КОДУ ПЕРШОГО БЛОКУ -->
+<div id="page-block1-code" class="hidden" style="margin-top: 20px;">
+  <h2>Введіть код доступу для першого блоку</h2>
+  <input type="text" id="input-code-block1" placeholder="Код доступу" />
+  <button id="btn-start-block1" disabled>Розпочати роботу над тестуванням</button>
+  <p id="error-code-block1" style="color:red;"></p>
+</div>
+
+<!-- ПЕРШИЙ БЛОК ТЕСТУ З ВКЛАДКАМИ -->
+<div id="page-block1-test" class="hidden" style="margin-top: 20px;">
+  <div class="tabs">
+    <button class="tab-btn" data-subject="ukr">Українська мова</button>
+    <button class="tab-btn" data-subject="math">Математика</button>
+  </div>
+  <div id="ukr" class="tab-content"></div>
+  <div id="math" class="tab-content hidden"></div>
+  <button id="btn-finish-block1" style="margin-top: 15px;">Завершити тестування</button>
+  <div id="confirm-finish-block1" class="confirm-box hidden">
+    <p>Ви точно хочете завершити роботу над тестуванням?</p>
+    <button id="confirm-yes-block1">Так</button>
+    <button id="confirm-no-block1">Ні</button>
+  </div>
+</div>
+
+<!-- РЕЗУЛЬТАТИ ПЕРШОГО БЛОКУ -->
+<div id="page-block1-result" class="hidden" style="margin-top: 20px;">
+  <h2>Результати першого блоку</h2>
+  <table>
+    <thead><tr><th>Предмет</th><th>Відповіли на питання</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Українська мова</td><td id="result-ukr"></td><td></td></tr>
+      <tr><td>Математика</td><td id="result-math"></td><td></td></tr>
+    </tbody>
+  </table>
+  <button id="btn-go-block2" style="margin-top: 15px;">Перейти до другого блоку</button>
+</div>
+
+<!-- ВВІД КОДУ ДРУГОГО БЛОКУ -->
+<div id="page-block2-code" class="hidden" style="margin-top: 20px;">
+  <h2>Введіть код доступу для другого блоку</h2>
+  <input type="text" id="input-code-block2" placeholder="Код доступу" />
+  <button id="btn-start-block2" disabled>Розпочати роботу над тестуванням</button>
+  <p id="error-code-block2" style="color:red;"></p>
+</div>
+
+<!-- ДРУГИЙ БЛОК ТЕСТУ З ВКЛАДКАМИ -->
+<div id="page-block2-test" class="hidden" style="margin-top: 20px;">
+  <div class="tabs">
+    <button class="tab-btn" data-subject="history">Історія України</button>
+    <button class="tab-btn" data-subject="eng">Англійська мова</button>
+  </div>
+  <div id="history" class="tab-content"></div>
+  <div id="eng" class="tab-content hidden"></div>
+  <button id="btn-finish-block2" style="margin-top: 15px;">Завершити тестування</button>
+  <div id="confirm-finish-block2" class="confirm-box hidden">
+    <p>Ви точно хочете завершити роботу над тестуванням?</p>
+    <button id="confirm-yes-block2">Так</button>
+    <button id="confirm-no-block2">Ні</button>
+  </div>
+</div>
+
+<!-- РЕЗУЛЬТАТИ ДРУГОГО БЛОКУ -->
+<div id="page-block2-result" class="hidden" style="margin-top: 20px;">
+  <h2>Результати тестування</h2>
+  <table>
+    <thead><tr><th>Предмет</th><th>Відповіли на питання</th><th>Бал</th></tr></thead>
+    <tbody>
+      <tr><td>Українська мова</td><td id="res-ukr"></td><td id="score-ukr"></td></tr>
+      <tr><td>Математика</td><td id="res-math"></td><td id="score-math"></td></tr>
+      <tr class="green-bg"><td>Історія України</td><td id="res-history"></td><td id="score-history"></td></tr>
+      <tr class="green-bg"><td>Англійська мова</td><td id="res-eng"></td><td id="score-eng"></td></tr>
+    </tbody>
+  </table>
+  <button id="btn-view-answers" style="margin-top: 15px;">Переглянути відповіді</button>
+</div>
+
+<!-- СТОРІНКА ВІДПОВІДЕЙ -->
+<div id="page-answers" class="hidden" style="margin-top: 20px;">
+  <h2>Відповіді на завдання</h2>
+  <div id="all-answers"></div>
+  <button id="btn-restart" style="margin-top: 15px;">Почати заново</button>
+</div>
+
+<script>
+  // Вопросы с простыми заданиями (по 12 на предмет)
+  const questions = {
+    ukr: Array(12).fill(0).map((_,i) => ({
+      q: `Питання з української мови №${i+1}`,
+      options: ["Відповідь А", "Відповідь Б", "Відповідь В", "Відповідь Г"],
+      a: 0
+    })),
+    math: Array(12).fill(0).map((_,i) => ({
+      q: `Питання з математики №${i+1}`,
+      options: ["1", "2", "3", "4"],
+      a: 1
+    })),
+    history: Array(12).fill(0).map((_,i) => ({
+      q: `Питання з історії України №${i+1}`,
+      options: ["Варіант 1", "Варіант 2", "Варіант 3", "Варіант 4"],
+      a: 2
+    })),
+    eng: Array(12).fill(0).map((_,i) => ({
+      q: `English question #${i+1}`,
+      options: ["Option A", "Option B", "Option C", "Option D"],
+      a: 3
+    })),
+  };
+
+  const answers = {
+    ukr: Array(12).fill(null),
+    math: Array(12).fill(null),
+    history: Array(12).fill(null),
+    eng: Array(12).fill(null)
+  };
+
+  const codeBlock1 = "54";
+  const codeBlock2 = "29";
+
+  // Элементы
+  const pageStart = document.getElementById("page-start");
+  const btnAcceptRules = document.getElementById("btn-accept-rules");
+
+  const pageGoBlock1 = document.getElementById("page-go-block1");
+  const btnGoBlock1 = document.getElementById("btn-go-block1");
+
+  const pageBlock1Code = document.getElementById("page-block1-code");
+  const inputCodeBlock1 = document.getElementById("input-code-block1");
+  const btnStartBlock1 = document.getElementById("btn-start-block1");
+  const errorCodeBlock1 = document.getElementById("error-code-block1");
+
+  const pageBlock1Test = document.getElementById("page-block1-test");
+  const tabButtonsBlock1 = pageBlock1Test.querySelectorAll(".tab-btn");
+  const ukrDiv = document.getElementById("ukr");
+  const mathDiv = document.getElementById("math");
+  const btnFinishBlock1 = document.getElementById("btn-finish-block1");
+  const confirmFinishBlock1 = document.getElementById("confirm-finish-block1");
+  const confirmYesBlock1 = document.getElementById("confirm-yes-block1");
+  const confirmNoBlock1 = document.getElementById("confirm-no-block1");
+
+  const pageBlock1Result = document.getElementById("page-block1-result");
+  const resultUkr = document.getElementById("result-ukr");
+  const resultMath = document.getElementById("result-math");
+  const btnGoBlock2 = document.getElementById("btn-go-block2");
+
+  const pageBlock2Code = document.getElementById("page-block2-code");
+  const inputCodeBlock2 = document.getElementById("input-code-block2");
+  const btnStartBlock2 = document.getElementById("btn-start-block2");
+  const errorCodeBlock2 = document.getElementById("error-code-block2");
+
+  const pageBlock2Test = document.getElementById("page-block2-test");
+  const tabButtonsBlock2 = pageBlock2Test.querySelectorAll(".tab-btn");
+  const historyDiv = document.getElementById("history");
+  const engDiv = document.getElementById("eng");
+  const btnFinishBlock2 = document.getElementById("btn-finish-block2");
+  const confirmFinishBlock2 = document.getElementById("confirm-finish-block2");
+  const confirmYesBlock2 = document.getElementById("confirm-yes-block2");
+  const confirmNoBlock2 = document.getElementById("confirm-no-block2");
+
+  const pageBlock2Result = document.getElementById("page-block2-result");
+  const resUkr = document.getElementById("res-ukr");
+  const resMath = document.getElementById("res-math");
+  const resHistory = document.getElementById("res-history");
+  const resEng = document.getElementById("res-eng");
+  const scoreUkr = document.getElementById("score-ukr");
+  const scoreMath = document.getElementById("score-math");
+  const scoreHistory = document.getElementById("score-history");
+  const scoreEng = document.getElementById("score-eng");
+  const btnViewAnswers = document.getElementById("btn-view-answers");
+
+  const pageAnswers = document.getElementById("page-answers");
+  const allAnswersDiv = document.getElementById("all-answers");
+  const btnRestart = document.getElementById("btn-restart");
+
+  // Показываем страницу и скрываем все остальные
+  function showPage(page) {
+    [pageStart, pageGoBlock1, pageBlock1Code, pageBlock1Test, pageBlock1Result,
+     pageBlock2Code, pageBlock2Test, pageBlock2Result, pageAnswers]
+      .forEach(p => p.classList.add("hidden"));
+    switch(page) {
+      case "start": pageStart.classList.remove("hidden"); break;
+      case "go-block1": pageGoBlock1.classList.remove("hidden"); break;
+      case "block1code": pageBlock1Code.classList.remove("hidden"); break;
+      case "block1test": pageBlock1Test.classList.remove("hidden"); break;
+      case "block1result": pageBlock1Result.classList.remove("hidden"); break;
+      case "block2code": pageBlock2Code.classList.remove("hidden"); break;
+      case "block2test": pageBlock2Test.classList.remove("hidden"); break;
+      case "block2result": pageBlock2Result.classList.remove("hidden"); break;
+      case "answers": pageAnswers.classList.remove("hidden"); break;
+    }
+  }
+
+  // Отрисовка вопросов для предмета в контейнер
+  function renderQuestions(subject, container) {
+    container.innerHTML = "";
+    questions[subject].forEach((item, idx) => {
+      const qDiv = document.createElement("div");
+      qDiv.style.marginBottom = "12px";
+
+      const qText = document.createElement("p");
+      qText.textContent = `${idx + 1}. ${item.q}`;
+      qDiv.appendChild(qText);
+
+      item.options.forEach((opt, i) => {
+        const label = document.createElement("label");
+        label.style.display = "block";
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = `${subject}-q${idx}`;
+        input.value = i;
+        if(answers[subject][idx] === i) input.checked = true;
+        input.addEventListener("change", () => {
+          answers[subject][idx] = i;
+        });
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(opt));
+        qDiv.appendChild(label);
+      });
+
+      container.appendChild(qDiv);
+    });
+  }
+
+  // Настройка вкладок: показываем выбранную, скрываем остальные
+  function setupTabs(buttons, containers) {
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.disabled = false);
+        btn.disabled = true;
+        containers.forEach(c => c.classList.add("hidden"));
+        const subject = btn.getAttribute("data-subject");
+        const container = containers.find(c => c.id === subject);
+        if(container) container.classList.remove("hidden");
+      });
+    });
+  }
+
+  // Подсчёт количества отвеченных вопросов
+  function countAnswered(subject) {
+    return answers[subject].filter(a => a !== null).length;
+  }
+
+  // Подсчёт баллов (только правильные ответы по a)
+  function countScore(subject) {
+    let score = 0;
+    answers[subject].forEach((ans, i) => {
+      if(ans === questions[subject][i].a) score++;
+    });
+    return score;
+  }
+
+  // Отображение результатов первого блока (только количество отвеченных)
+  function showResultsBlock1() {
+    resultUkr.textContent = `${countAnswered("ukr")} з 12`;
+    resultMath.textContent = `${countAnswered("math")} з 12`;
+  }
+
+  // Отображение результатов второго блока (количество и баллы)
+  function showResultsBlock2() {
+    resUkr.textContent = `${countAnswered("ukr")} з 12`;
+    resMath.textContent = `${countAnswered("math")} з 12`;
+    resHistory.textContent = `${countAnswered("history")} з 12`;
+    resEng.textContent = `${countAnswered("eng")} з 12`;
+
+    scoreUkr.textContent = countScore("ukr");
+    scoreMath.textContent = countScore("math");
+    scoreHistory.textContent = countScore("history");
+    scoreEng.textContent = countScore("eng");
+  }
+
+  // Показать все ответы на странице "Відповіді"
+  function showAllAnswers() {
+    allAnswersDiv.innerHTML = "";
+    ["ukr", "math", "history", "eng"].forEach(subject => {
+      const h3 = document.createElement("h3");
+      let subjName = "";
+      switch(subject) {
+        case "ukr": subjName = "Українська мова"; break;
+        case "math": subjName = "Математика"; break;
+        case "history": subjName = "Історія України"; break;
+        case "eng": subjName = "Англійська мова"; break;
+      }
+      allAnswersDiv.appendChild(h3);
+      h3.textContent = subjName;
+
+      questions[subject].forEach((item, i) => {
+        const div = document.createElement("div");
+        div.style.marginBottom = "10px";
+        const qText = document.createElement("p");
+        qText.textContent = `${i+1}. ${item.q}`;
+        div.appendChild(qText);
+
+        const userAns = answers[subject][i];
+        const ansText = userAns !== null ? item.options[userAns] : "(Не відповіли)";
+        const ansP = document.createElement("p");
+        ansP.textContent = `Ваш вибір: ${ansText}`;
+        div.appendChild(ansP);
+
+        allAnswersDiv.appendChild(div);
+      });
+    });
+  }
+
+  // ОБРАБОТЧИКИ СОБЫТИЙ
+
+  // Принятие правил
+  btnAcceptRules.addEventListener("click", () => {
+    showPage("go-block1");
+  });
+
+  // Переход к первому блоку (код доступа)
+  btnGoBlock1.addEventListener("click", () => {
+    showPage("block1code");
+    inputCodeBlock1.value = "";
+    btnStartBlock1.disabled = true;
+    errorCodeBlock1.textContent = "";
+  });
+
+  // Проверка кода первого блока
+  inputCodeBlock1.addEventListener("input", () => {
+    if(inputCodeBlock1.value.trim() === codeBlock1) {
+      btnStartBlock1.disabled = false;
+      errorCodeBlock1.textContent = "";
+    } else {
+      btnStartBlock1.disabled = true;
+    }
+  });
+
+  // Начало теста первого блока
+  btnStartBlock1.addEventListener("click", () => {
+    if(inputCodeBlock1.value.trim() === codeBlock1) {
+      showPage("block1test");
+      renderQuestions("ukr", ukrDiv);
+      renderQuestions("math", mathDiv);
+      setupTabs(tabButtonsBlock1, [ukrDiv, mathDiv]);
+      // По умолчанию активна укр мова
+      tabButtonsBlock1.forEach(b => b.disabled = false);
+      tabButtonsBlock1[0].disabled = true;
+      ukrDiv.classList.remove("hidden");
+      mathDiv.classList.add("hidden");
+    } else {
+      errorCodeBlock1.textContent = "Невірний код доступу";
+    }
+  });
+
+  // Завершение теста первого блока - показать подтверждение только по клику
+  btnFinishBlock1.addEventListener("click", () => {
+    confirmFinishBlock1.classList.remove("hidden");
+  });
+
+  confirmNoBlock1.addEventListener("click", () => {
+    confirmFinishBlock1.classList.add("hidden");
+  });
+
+  confirmYesBlock1.addEventListener("click", () => {
+    confirmFinishBlock1.classList.add("hidden");
+    showResultsBlock1();
+    showPage("block1result");
+  });
+
+  // Переход ко второму блоку
+  btnGoBlock2.addEventListener("click", () => {
+    showPage("block2code");
+    inputCodeBlock2.value = "";
+    btnStartBlock2.disabled = true;
+    errorCodeBlock2.textContent = "";
+  });
+
+  // Проверка кода второго блока
+  inputCodeBlock2.addEventListener("input", () => {
+    if(inputCodeBlock2.value.trim() === codeBlock2) {
+      btnStartBlock2.disabled = false;
+      errorCodeBlock2.textContent = "";
+    } else {
+      btnStartBlock2.disabled = true;
+    }
+  });
+
+  // Начало теста второго блока
+  btnStartBlock2.addEventListener("click", () => {
+    if(inputCodeBlock2.value.trim() === codeBlock2) {
+      showPage("block2test");
+      renderQuestions("history", historyDiv);
+      renderQuestions("eng", engDiv);
+      setupTabs(tabButtonsBlock2, [historyDiv, engDiv]);
+      tabButtonsBlock2.forEach(b => b.disabled = false);
+      tabButtonsBlock2[0].disabled = true;
+      historyDiv.classList.remove("hidden");
+      engDiv.classList.add("hidden");
+    } else {
+      errorCodeBlock2.textContent = "Невірний код доступу";
+    }
+  });
+
+  // Завершение теста второго блока - подтверждение
+  btnFinishBlock2.addEventListener("click", () => {
+    confirmFinishBlock2.classList.remove("hidden");
+  });
+
+  confirmNoBlock2.addEventListener("click", () => {
+    confirmFinishBlock2.classList.add("hidden");
+  });
+
+  confirmYesBlock2.addEventListener("click", () => {
+    confirmFinishBlock2.classList.add("hidden");
+    showResultsBlock2();
+    showPage("block2result");
+  });
+
+  // Просмотр ответов
+  btnViewAnswers.addEventListener("click", () => {
+    showAllAnswers();
+    showPage("answers");
+  });
+
+  // Перезапуск теста
+  btnRestart.addEventListener("click", () => {
+    location.reload();
+  });
+
+  // Стартуем с правил
+  showPage("start");
+</script>
+
+</body>
+</html>
