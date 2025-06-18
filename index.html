@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Тестування</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+    .hidden { display: none; }
+    .page { padding: 20px; max-width: 800px; margin: auto; }
+    button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .tabs { display: flex; margin-bottom: 10px; }
+    .tab { margin-right: 10px; padding: 10px; background: #ddd; cursor: pointer; border-radius: 4px; user-select: none; }
+    .tab.active { background: #bbb; font-weight: bold; }
+    .tab-content { background: white; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .question { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; cursor: pointer; }
+    table.results-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    table.results-table th, table.results-table td { border: 1px solid #ccc; padding: 8px; text-align: center; background-color: #fff; }
+    .col3-green { background-color: #c9f7c2; }
+    .correct { color: green; font-weight: bold; }
+    .wrong { color: red; font-weight: bold; }
+    #answersModal {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+      padding: 20px;
+      z-index: 1000;
+    }
+    #answersModal .content {
+      background: white; padding: 20px; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px;
+    }
+    #answersModal .close-btn {
+      margin-top: 10px; padding: 10px 20px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<div id="answersModal">
+  <div class="content">
+    <h2>Ваші відповіді</h2>
+    <div id="answersInner"></div>
+    <button class="close-btn" onclick="closeAnswers()">Закрити</button>
+  </div>
+</div>
+
+<script>
+  const app = document.getElementById("app");
+  const answersModal = document.getElementById("answersModal");
+  const answersInner = document.getElementById("answersInner");
+
+  // Теми по блоках
+  const subjects = {
+    1: ["Українська мова", "Математика"],
+    2: ["Історія України", "Англійська мова"]
+  };
+
+  // Питання і відповіді
+  const questions = {
+    "Українська мова": [
+      { question: "Визначте правильне написання слова:", options: ["клініка", "клінікаа", "клінніка", "кленіка"], correct: 0 },
+      { question: "Який знак пунктуації використовується в кінці запитального речення?", options: ["Крапка", "Кома", "Двокрапка", "Знак питання"], correct: 3 },
+      { question: "Вкажіть правильний варіант закінчення слова: 'дружб__'", options: ["а", "у", "і", "о"], correct: 1 },
+      // Нові питання замість 4,5,6
+      { question: "Виберіть правильне речення:", options: ["Я читаю книжку.", "Я читати книжка.", "Я читаю книжкує.", "Я читав книжок."], correct: 0 },
+      { question: "Визначте частину мови слова 'бігти':", options: ["іменник", "прикметник", "дієслово", "прислівник"], correct: 2 },
+      { question: "Яке слово є синонімом до слова 'швидкий'?", options: ["повільний", "стрімкий", "важкий", "великий"], correct: 1 },
+      { question: "Визначте наголос у слові 'зеленá':", options: ["на першому складі", "на другому складі", "на третьому складі", "на четвертому складі"], correct: 1 },
+      { question: "Вставте пропущене слово: Він __ до школи.", options: ["йде", "йдуть", "йду", "йдемо"], correct: 0 },
+      { question: "Яке речення є спонукальним?", options: ["Іди сюди!", "Він йде в школу.", "Ми читаємо книгу.", "Сонце світить."], correct: 0 },
+      { question: "Визначте відмінок слова 'книга' в реченні: Я читаю книгу.", options: ["називний", "родовий", "давальний", "знахідний"], correct: 3 },
+      { question: "Виберіть правильно побудоване речення:", options: ["Вона гарна дівчина.", "Вона дівчина гарна.", "Вона гарно дівчина.", "Вона дівчина гарно."], correct: 0 },
+      { question: "Яке слово є прикметником?", options: ["великий", "бігти", "щастя", "стіл"], correct: 0 }
+    ],
+    "Математика": [
+      { question: "Що таке добуток чисел 3 і 4?", options: ["7", "12", "14", "9"], correct: 1 },
+      { question: "Знайдіть суму чисел 5 і 7.", options: ["10", "11", "12", "13"], correct: 2 },
+      { question: "Яке число є парним?", options: ["3", "7", "10", "15"], correct: 2 },
+      { question: "Розв’яжіть: 9 - 4 = ?", options: ["3", "4", "5", "6"], correct: 2 },
+      { question: "Який результат множення 6 на 2?", options: ["8", "10", "12", "14"], correct: 2 },
+      { question: "Знайдіть різницю чисел 15 і 5.", options: ["8", "9", "10", "11"], correct: 2 },
+      { question: "Обчисліть: 7 + 8 =", options: ["13", "15", "17", "19"], correct: 1 }, // правильно 15
+      { question: "Яке число є найбільшим?", options: ["20", "15", "25", "10"], correct: 2 },
+      { question: "Обчисліть: 10 - 3 =", options: ["7", "8", "6", "9"], correct: 0 },
+      { question: "Яка форма має 4 рівні сторони?", options: ["трикутник", "квадрат", "круг", "прямокутник"], correct: 1 },
+      { question: "Скільки кутів у трикутника?", options: ["3", "4", "5", "6"], correct: 0 },
+      { question: "Обчисліть: 5 + 5 =", options: ["9", "10", "11", "12"], correct: 1 }
+    ],
+    "Історія України": [
+      { question: "Хто був першим президентом України?", options: ["Леонід Кучма", "Віктор Ющенко", "Леонід Кравчук", "Віктор Янукович"], correct: 2 },
+      { question: "Коли була проголошена незалежність України?", options: ["1991", "1990", "1989", "1992"], correct: 0 },
+      { question: "Яка подія відбулася в 2014 році?", options: ["Помаранчева революція", "Євромайдан", "Революція гідності", "Анексія Криму"], correct: 3 },
+      { question: "Хто заснував Київ?", options: ["Кий, Щек і Хорив", "Володимир Великий", "Ярослав Мудрий", "Богдан Хмельницький"], correct: 0 },
+      { question: "Яка столиця України?", options: ["Львів", "Одеса", "Київ", "Харків"], correct: 2 },
+      { question: "Коли почалася Друга світова війна?", options: ["1938", "1939", "1940", "1941"], correct: 1 },
+      { question: "Хто був гетьманом Війська Запорозького?", options: ["Богдан Хмельницький", "Іван Мазепа", "Петро Дорошенко", "Іван Сірко"], correct: 0 },
+      { question: "Що таке Козаччина?", options: ["Релігія", "Історична доба", "Соціальний рух", "Місто"], correct: 2 },
+      { question: "Коли Україна стала членом ООН?", options: ["1945", "1991", "2000", "1989"], correct: 1 },
+      { question: "Що таке Голодомор?", options: ["Війна", "Голодомор", "Епідемія", "Революція"], correct: 1 },
+      { question: "Яка річка найдовша в Україні?", options: ["Дніпро", "Дністер", "Південний Буг", "Тиса"], correct: 0 },
+      { question: "Хто автор Конституції України?", options: ["Пилип Орлик", "Володимир Зеленський", "Леонід Кравчук", "Юрій Шевельов"], correct: 0 }
+    ],
+    "Англійська мова": [
+      { question: "What is the opposite of 'big'?", options: ["small", "tall", "long", "short"], correct: 0 },
+      { question: "Complete the sentence: I __ a student.", options: ["is", "are", "am", "be"], correct: 2 },
+      { question: "Choose the correct past tense of 'go':", options: ["goed", "went", "gone", "goes"], correct: 1 },
+      { question: "Which is a color?", options: ["Dog", "Blue", "Run", "Happy"], correct: 1 },
+      { question: "How do you say 'Дякую' in English?", options: ["Sorry", "Thanks", "Please", "Hello"], correct: 1 },
+      { question: "Select the correct sentence:", options: ["She go to school", "She goes to school", "She going to school", "She gone to school"], correct: 1 },
+      { question: "What is the English word for 'яблуко'?", options: ["Apple", "Orange", "Banana", "Grape"], correct: 0 },
+      { question: "Choose the correct question word: __ is your name?", options: ["Who", "What", "Where", "When"], correct: 1 },
+      { question: "Complete the sentence: They __ playing football now.", options: ["is", "are", "am", "be"], correct: 1 },
+      { question: "What is the plural of 'mouse'?", options: ["mouses", "mice", "mouse", "meese"], correct: 1 },
+      { question: "Choose the correct article: __ apple a day keeps the doctor away.", options: ["A", "An", "The", "No article"], correct: 1 },
+      { question: "What is the past tense of 'see'?", options: ["saw", "seen", "see", "seed"], correct: 0 }
+    ]
+  };
+
+  let state = {
+    currentPage: "rules",
+    block: 1,
+    subjectIndex: 0,
+    answers: {
+      "Українська мова": Array(12).fill(null),
+      "Математика": Array(12).fill(null),
+      "Історія України": Array(12).fill(null),
+      "Англійська мова": Array(12).fill(null)
+    }
+  };
+
+  function setPage(page) {
+    state.currentPage = page;
+    render();
+  }
+
+  function render() {
+    const { currentPage, block, subjectIndex, answers } = state;
+    const subjectList = subjects[block];
+    const subject = subjectList[subjectIndex];
+
+    if (currentPage === "rules") {
+      app.innerHTML = `
+        <div class="page">
+          <h2>Правила тестування</h2>
+          <p>Ласкаво просимо до платформи тестування! Тут ви будете проходити тести з 4 предметів, розбитих на 2 блоки.</p>
+          <h3>Як користуватись платформою:</h3>
+          <ul>
+            <li>Ознайомтесь з правилами і натисніть кнопку "З правилами ознайомився/лась".</li>
+            <li>Введіть код доступу, щоб перейти до відповідного блоку тестування.</li>
+            <li>У кожному блоці є два предмети, які можна вибирати у вкладках.</li>
+            <li>Обирайте відповіді на питання, натискаючи радіокнопки.</li>
+            <li>Після відповіді на всі питання блоку натисніть "Завершити тестування".</li>
+            <li>Підтвердіть завершення, щоб побачити результати.</li>
+            <li>Після першого блоку переходьте до другого за кодом доступу.</li>
+            <li>Після другого блоку ви побачите підсумкову таблицю з результатами та зможете переглянути свої відповіді.</li>
+          </ul>
+          <button onclick="setPage('access')">З правилами ознайомився/лась</button>
+        </div>
+      `;
+    } else if (currentPage === "access") {
+      app.innerHTML = `
+        <div class="page">
+          <h2>Введіть код доступу для блоку ${block}</h2>
+          <input type="text" id="accessCode" placeholder="Код доступу" />
+          <button onclick="checkAccess()">Перейти до першого блоку</button>
+        </div>
+      `;
+    } else if (currentPage === "startTest") {
+      app.innerHTML = `
+        <div class="page">
+          <h2>Готові розпочати тестування блоку ${block}?</h2>
+          <button onclick="setPage('test')">Розпочати роботу над тестуванням</button>
+        </div>
+      `;
+    } else if (currentPage === "test") {
+      app.innerHTML = `
+        <div class="page">
+          <div class="tabs">
+            ${subjectList.map((s, i) => `<div class="tab ${i === subjectIndex ? "active" : ""}" onclick="switchTab(${i})">${s}</div>`).join('')}
+          </div>
+          <div class="tab-content">
+            ${renderQuestions(subject)}
+          </div>
+          <button onclick="finishBlock()">Завершити тестування</button>
+        </div>
+      `;
+      fillAnswers();
+    } else if (currentPage === "blockResult") {
+      // Після першого блоку: показати таблицю із результатами, де 3 колонка порожня для першого блоку і з написом "До виконання не приступив" для предметів 2 блоку
+      let rows = '';
+      ["Українська мова", "Математика", "Історія України", "Англійська мова"].forEach(subj => {
+        let answeredCount = answers[subj].filter(a => a !== null).length;
+        let col3 = "";
+        if (block === 1 && (subj === "Історія України" || subj === "Англійська мова")) {
+          col3 = "До виконання не приступив";
+        } else if (block === 2) {
+          const correctCount = countCorrect(subj, answers[subj]);
+          col3 = correctCount + " / 12";
+        }
+        rows += `<tr>
+          <td>${subj}</td>
+          <td>${answeredCount} / 12</td>
+          <td ${block === 2 ? 'class="col3-green"' : ''}>${col3}</td>
+        </tr>`;
+      });
+      app.innerHTML = `
+        <div class="page">
+          <h2>Результати блоку ${block}</h2>
+          <table class="results-table">
+            <thead>
+              <tr><th>Предмет</th><th>Відповіді на питання</th><th>Результат</th></tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          ${block === 1 ? `<button onclick="goToBlock2()">Перейти на другий блок</button>` : `<button onclick="setPage('finalResult')">Переглянути відповіді</button>`}
+        </div>
+      `;
+    } else if (currentPage === "finalResult") {
+      // Підсумкова таблиця з результатами (вся 4 предмета), третя колонка зеленим
+      let rows = '';
+      ["Українська мова", "Математика", "Історія України", "Англійська мова"].forEach(subj => {
+        const answeredCount = answers[subj].filter(a => a !== null).length;
+        const correctCount = countCorrect(subj, answers[subj]);
+        rows += `<tr>
+          <td>${subj}</td>
+          <td>${answeredCount} / 12</td>
+          <td class="col3-green">${correctCount} / 12</td>
+        </tr>`;
+      });
+      app.innerHTML = `
+        <div class="page">
+          <h2>Підсумкові результати</h2>
+          <table class="results-table">
+            <thead>
+              <tr><th>Предмет</th><th>Відповіді на питання</th><th>Правильні відповіді</th></tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          <button onclick="showAnswers()">Переглянути відповіді</button>
+        </div>
+      `;
+    }
+  }
+
+  function renderQuestions(subject) {
+    let html = '';
+    questions[subject].forEach((q, i) => {
+      html += `
+      <div class="question">
+        <p><strong>Питання ${i + 1}:</strong> ${q.question}</p>
+        ${q.options.map((opt, idx) => `
+          <label>
+            <input type="radio" name="${subject}-q${i}" value="${idx}" onchange="saveAnswer('${subject}', ${i}, ${idx})"
+            ${state.answers[subject][i] === idx ? 'checked' : ''} />
+            ${opt}
+          </label>
+        `).join('')}
+      </div>
+      `;
+    });
+    return html;
+  }
+
+  function saveAnswer(subject, questionIndex, answerIndex) {
+    state.answers[subject][questionIndex] = answerIndex;
+  }
+
+  function fillAnswers() {
+    // При переході до сторінки тесту відновити вибрані відповіді
+    const subject = subjects[state.block][state.subjectIndex];
+    questions[subject].forEach((_, i) => {
+      const val = state.answers[subject][i];
+      if (val !== null) {
+        const input = document.querySelector(`input[name="${subject}-q${i}"][value="${val}"]`);
+        if (input) input.checked = true;
+      }
+    });
+  }
+
+  function switchTab(index) {
+    state.subjectIndex = index;
+    render();
+  }
+
+  function checkAccess() {
+    const codeInput = document.getElementById("accessCode");
+    const code = codeInput.value.trim();
+    if (state.block === 1 && code === "54") {
+      setPage("startTest");
+    } else if (state.block === 2 && code === "29") {
+      setPage("startTest");
+    } else {
+      alert("Невірний код доступу. Спробуйте ще.");
+    }
+  }
+
+  function finishBlock() {
+    if (!confirm("Ви точно хочете завершити роботу над тестуванням?")) return;
+
+    // Перевірити, чи всі питання відповіли (хоча б частково можна)
+    // Можна додати перевірку, але зараз пропускаємо
+
+    setPage("blockResult");
+  }
+
+  function goToBlock2() {
+    state.block = 2;
+    state.subjectIndex = 0;
+    setPage("access");
+  }
+
+  function countCorrect(subject, answersArr) {
+    let count = 0;
+    answersArr.forEach((ans, i) => {
+      if (ans !== null && ans === questions[subject][i].correct) count++;
+    });
+    return count;
+  }
+
+  function showAnswers() {
+    answersInner.innerHTML = '';
+    ["Українська мова", "Математика", "Історія України", "Англійська мова"].forEach(subject => {
+      answersInner.innerHTML += `<h3>${subject}</h3>`;
+      questions[subject].forEach((q, i) => {
+        const userAnswer = state.answers[subject][i];
+        const correctAnswer = q.correct;
+        let answerClass = "";
+        if (userAnswer === null) {
+          answerClass = "wrong";
+        } else if (userAnswer === correctAnswer) {
+          answerClass = "correct";
+        } else {
+          answerClass = "wrong";
+        }
+        answersInner.innerHTML += `
+          <p><strong>Питання ${i + 1}:</strong> ${q.question}</p>
+          <p>Ваша відповідь: <span class="${answerClass}">${userAnswer !== null ? q.options[userAnswer] : "Відповідь відсутня"}</span></p>
+          <p>Правильна відповідь: ${q.options[correctAnswer]}</p>
+          <hr/>
+        `;
+      });
+    });
+    setPage("answers");
+  }
+
+  // Початкова ініціалізація
+  setPage("rules");
+})();
+
+</script>  
+</body>
+</html>  
