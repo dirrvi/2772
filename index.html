@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн-Касса</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .product-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        label {
+            display: block;
+            margin: 5px 0;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        .receipt {
+            margin-top: 20px;
+            background: #e0ffe0;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Онлайн-Касса</h1>
+
+    <div class="product-list" id="productList">
+        <!-- Здесь будет список товаров -->
+    </div>
+
+    <label for="payment">Способ оплаты:</label>
+    <select id="payment">
+        <option value="cash">Наличные</option>
+        <option value="card">Карта</option>
+    </select>
+
+    <button onclick="printReceipt()">Пробить чек</button>
+
+    <div class="receipt" id="receipt">
+        <h3>Чек</h3>
+        <p id="receiptText"></p>
+    </div>
+</div>
+
+<script>
+    const products = {
+        "Кофе": 150,
+        "Чай": 100,
+        "Булочка": 50,
+        "Сэндвич": 200,
+        "Сок": 120,
+        "Пицца": 500,
+        "Пирожное": 80,
+        "Шоколад": 90,
+        "Минеральная вода": 70,
+        "Салат": 250,
+        "Хот-дог": 180
+    };
+
+    const productList = document.getElementById('productList');
+
+    // Генерация списка товаров с чекбоксами
+    for (const [name, price] of Object.entries(products)) {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${name}"> ${name} — ${price} ₽`;
+        productList.appendChild(label);
+    }
+
+    function printReceipt() {
+        const selectedProducts = [];
+        const checkboxes = productList.querySelectorAll('input[type="checkbox"]:checked');
+        checkboxes.forEach(cb => selectedProducts.push(cb.value));
+
+        if (selectedProducts.length === 0) {
+            alert('Пожалуйста, выберите хотя бы один товар.');
+            return;
+        }
+
+        const paymentMethod = document.getElementById('payment').value;
+        const receipt = document.getElementById('receipt');
+        const receiptText = document.getElementById('receiptText');
+
+        let total = 0;
+        let details = '';
+
+        selectedProducts.forEach(product => {
+            const price = products[product];
+            total += price;
+            details += `${product}: ${price} ₽<br>`;
+        });
+
+        details += `<strong>Итого: ${total} ₽</strong><br>`;
+        details += `Оплата: ${paymentMethod === 'cash' ? 'Наличные' : 'Карта'}<br>`;
+        details += `Спасибо за покупку!`;
+
+        receiptText.innerHTML = details;
+        receipt.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
