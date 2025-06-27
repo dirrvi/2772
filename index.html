@@ -12,7 +12,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: auto;
             background: white;
             padding: 20px;
@@ -23,17 +23,15 @@
             text-align: center;
         }
         .product-list {
-            max-height: 200px;
-            overflow-y: auto;
             margin-bottom: 20px;
-            border: 1px solid #ddd;
             padding: 10px;
             border-radius: 6px;
             background: #fafafa;
+            border: 1px solid #ddd;
         }
-        label {
-            display: block;
+        label, p {
             margin: 5px 0;
+            font-size: 16px;
         }
         button {
             width: 100%;
@@ -43,19 +41,40 @@
             border: none;
             background-color: #4CAF50;
             color: white;
+            font-size: 16px;
         }
-        select {
+        select, input {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
         }
         .receipt {
             margin-top: 20px;
             background: #e0ffe0;
-            padding: 10px;
+            padding: 15px;
             border-radius: 6px;
             display: none;
+            font-size: 16px;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            text-align: center;
         }
     </style>
 </head>
@@ -64,18 +83,30 @@
 <div class="container">
     <h1>Онлайн-Касса</h1>
 
-    <div class="product-list" id="productList">
-        <!-- Здесь будет список товаров -->
+    <button onclick="generateOrder()">Сгенерировать товары и сумму</button>
+
+    <div class="product-list" id="productList" style="display:none;">
+        <h3>Выбранные товары:</h3>
+        <div id="productDetails"></div>
+        <p><strong>Итого: <span id="totalAmount">0</span> ₽</strong></p>
     </div>
 
-    <label for="payment">Способ оплаты:</label>
-    <select id="payment">
-        <option value="cash">Наличные</option>
-        <option value="card">Карта</option>
-    </select>
+    <div id="paymentBlock" style="display:none;">
+        <label for="payment">Способ оплаты:</label>
+        <select id="payment">
+            <option value="cash">Наличные</option>
+            <option value="card">Карта</option>
+        </select>
 
-    <button onclick="printReceipt()">Пробить чек</button>
+        <div id="cashInput" style="display:none;">
+            <label for="cashGiven">Сумма, которую дал покупатель (₽):</label>
+            <input type="number" id="cashGiven" min="0" placeholder="Введите сумму">
+        </div>
 
+        <button onclick="processPayment()">Пробить чек</button>
+    </div>
+
+    <div class="loading" id="loadingMessage">Соединение с терминалом...</div>
     <div class="receipt" id="receipt">
         <h3>Чек</h3>
         <p id="receiptText"></p>
@@ -94,47 +125,110 @@
         "Шоколад": 90,
         "Минеральная вода": 70,
         "Салат": 250,
-        "Хот-дог": 180
+        "Хот-дог": 180,
+        "Круассан": 110,
+        "Чизкейк": 220,
+        "Лимонад": 130,
+        "Кола": 150,
+        "Энергетик": 190,
+        "Бутылка воды 0.5л": 60,
+        "Бутылка воды 1.5л": 100,
+        "Фруктовый салат": 210,
+        "Мороженое": 120,
+        "Суп": 300,
+        "Бургер": 450,
+        "Картофель фри": 160,
+        "Пирог": 140
     };
 
-    const productList = document.getElementById('productList');
+    let selectedOrder = {};
+    let totalAmount = 0;
 
-    // Генерация списка товаров с чекбоксами
-    for (const [name, price] of Object.entries(products)) {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${name}"> ${name} — ${price} ₽`;
-        productList.appendChild(label);
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function printReceipt() {
-        const selectedProducts = [];
-        const checkboxes = productList.querySelectorAll('input[type="checkbox"]:checked');
-        checkboxes.forEach(cb => selectedProducts.push(cb.value));
+    function generateOrder() {
+        selectedOrder = {};
+        totalAmount = 0;
+        const productKeys = Object.keys(products);
+        const productDetails = document.getElementById('productDetails');
+        productDetails.innerHTML = '';
 
-        if (selectedProducts.length === 0) {
-            alert('Пожалуйста, выберите хотя бы один товар.');
-            return;
+        const numProducts = getRandomInt(2, 5);
+
+        for (let i = 0; i < numProducts; i++) {
+            const randomProduct = productKeys[getRandomInt(0, productKeys.length - 1)];
+            const quantity = getRandomInt(1, 3);
+            const price = products[randomProduct];
+            const subtotal = price * quantity;
+
+            if (selectedOrder[randomProduct]) {
+                selectedOrder[randomProduct].quantity += quantity;
+                selectedOrder[randomProduct].subtotal += subtotal;
+            } else {
+                selectedOrder[randomProduct] = { price, quantity, subtotal };
+            }
+
+            totalAmount += subtotal;
         }
 
-        const paymentMethod = document.getElementById('payment').value;
-        const receipt = document.getElementById('receipt');
-        const receiptText = document.getElementById('receiptText');
+        for (const [name, details] of Object.entries(selectedOrder)) {
+            productDetails.innerHTML += `${name} — ${details.quantity} шт. × ${details.price} ₽ = ${details.subtotal} ₽<br>`;
+        }
 
-        let total = 0;
+        document.getElementById('totalAmount').innerText = totalAmount;
+        document.getElementById('productList').style.display = 'block';
+        document.getElementById('paymentBlock').style.display = 'block';
+        document.getElementById('receipt').style.display = 'none';
+        document.getElementById('loadingMessage').style.display = 'none';
+        document.getElementById('cashInput').style.display = 'none';
+    }
+
+    document.getElementById('payment').addEventListener('change', () => {
+        const paymentMethod = document.getElementById('payment').value;
+        document.getElementById('cashInput').style.display = paymentMethod === 'cash' ? 'block' : 'none';
+    });
+
+    function processPayment() {
+        const paymentMethod = document.getElementById('payment').value;
+
+        if (paymentMethod === 'cash') {
+            const cashGiven = parseFloat(document.getElementById('cashGiven').value);
+            if (isNaN(cashGiven) || cashGiven < totalAmount) {
+                alert('Введите сумму, достаточную для оплаты.');
+                return;
+            }
+            const change = cashGiven - totalAmount;
+            showReceipt(`Оплата наличными.<br>Получено: ${cashGiven} ₽<br>Сдача: ${change} ₽`);
+        } else {
+            document.getElementById('loadingMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('loadingMessage').style.display = 'none';
+                const success = Math.random() < 0.8;
+                if (success) {
+                    showReceipt('Оплата картой прошла успешно.');
+                } else {
+                    alert('Оплата отклонена. Попробуйте снова.');
+                }
+            }, 2000);
+        }
+    }
+
+    function showReceipt(paymentInfo) {
+        const receiptText = document.getElementById('receiptText');
         let details = '';
 
-        selectedProducts.forEach(product => {
-            const price = products[product];
-            total += price;
-            details += `${product}: ${price} ₽<br>`;
-        });
+        for (const [name, item] of Object.entries(selectedOrder)) {
+            details += `${name} — ${item.quantity} шт. × ${item.price} ₽ = ${item.subtotal} ₽<br>`;
+        }
 
-        details += `<strong>Итого: ${total} ₽</strong><br>`;
-        details += `Оплата: ${paymentMethod === 'cash' ? 'Наличные' : 'Карта'}<br>`;
+        details += `<strong>Итого: ${totalAmount} ₽</strong><br>`;
+        details += `${paymentInfo}<br>`;
         details += `Спасибо за покупку!`;
 
         receiptText.innerHTML = details;
-        receipt.style.display = 'block';
+        document.getElementById('receipt').style.display = 'block';
     }
 </script>
 
